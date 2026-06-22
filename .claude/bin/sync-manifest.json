@@ -1,0 +1,40 @@
+{
+  "_comment": "Astrolabe sync manifest. The template is the source of truth for FRAMEWORK paths; sync copies them into an instance. PERSONAL paths are NEVER written or deleted by sync (an instance's identity). OBSOLETED paths are deleted from the instance on every sync (former layouts). Sync is additive: it never deletes an instance file that isn't in `obsoleted`.",
+  "framework": {
+    "dirs": [
+      ".claude/calc",
+      ".claude/hooks",
+      ".claude/commands",
+      ".claude/agents/destiny",
+      ".claude/agents/management",
+      ".claude/skills/03-destiny-systems",
+      ".claude/skills/04-decision-method",
+      ".claude/rules"
+    ],
+    "files": [
+      ".claude/agents/intermediate-reviewer.md",
+      ".claude/agents/security-reviewer.md",
+      ".claude/agents/requirements-analyst.md",
+      ".claude/agents/deep-analyst.md",
+      ".claude/bin/canon-amend.mjs",
+      ".claude/bin/sync.mjs",
+      ".claude/bin/sync-manifest.json",
+      ".claude/settings.json"
+    ]
+  },
+  "personal": [
+    ".claude/canon/**",
+    ".claude/calc/canon-consistency.test.mjs",
+    ".claude/calc/eval-extra.json",
+    ".claude/rules/learned-instincts.md",
+    ".claude/skills/01-personal-profile/**",
+    ".claude/learning/**",
+    ".claude/SYNC-LOG.md",
+    "docs/**",
+    "workspaces/**",
+    "CLAUDE.md",
+    "README.md",
+    ".gitignore"
+  ],
+  "obsoleted": []
+}

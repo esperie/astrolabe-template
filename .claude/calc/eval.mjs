@@ -40,6 +40,14 @@ const META = {
   "vet-gate.test.mjs":         { system: "vet-gate hook",           expect: 9,   oracle: "Stop-gate scenarios",         residual: "—" },
 };
 
+// Optional per-instance suite registrations — private oracle suites an instance adds beyond the
+// framework set (e.g. a family-tuned bazi.test). Lives in eval-extra.json (PERSONAL, never synced),
+// merged over the framework META so those suites get count-pinned too. Absent in the bare template.
+try {
+  const extra = JSON.parse(fs.readFileSync(path.join(__dirname, "eval-extra.json"), "utf8"));
+  Object.assign(META, extra);
+} catch { /* no per-instance extras — fine */ }
+
 const flags = new Set(process.argv.slice(2));
 const json = flags.has("--json"), quiet = flags.has("--quiet");
 
