@@ -147,8 +147,9 @@ function placeChart({ lunarMonth, lunarDay, yearStem, yearBranch, hourBranch, ge
 }
 
 /**
- * Compose from a solar birth datetime. useTrueSolar=true → 未时 (Chart B, default,
- * consistent with [reference]); false → raw clock 申时 (Chart A, the free-tool convention).
+ * Compose from a solar birth datetime. useTrueSolar=true → hour pillar from true-solar time
+ * (the orthodox convention); false → hour from raw civil-clock time. Where the two land in
+ * different 时辰 the charts fork — keep both (the per-person A/B discipline).
  */
 function chartFromSolar({ y, m, d, hour, minute = 0, tz, longitude, gender = "male", useTrueSolar = true }) {
   const lun = lunar.solarToLunar(y, m, d, tz);
@@ -165,7 +166,7 @@ function chartFromSolar({ y, m, d, hour, minute = 0, tz, longitude, gender = "ma
     yearStem: b.pillars.year.stem, yearBranch: b.pillars.year.branch,
     hourBranch, gender,
   });
-  return { lunar: lun, hourBranch, convention: useTrueSolar ? "true-solar (B/未)" : "clock (A/申)", ...chart };
+  return { lunar: lun, hourBranch, convention: `${useTrueSolar ? "true-solar" : "clock"} (${hourBranch})`, ...chart };
 }
 
 module.exports = { placeChart, chartFromSolar };
