@@ -5,7 +5,8 @@
  * (Albert Einstein); onboarding repoints the default at the instance owner's birth data.
  *
  *   node .claude/calc/cast.mjs                         # the default sample chart
- *   node .claude/calc/cast.mjs 1990-05-20 08:30 8 114  # other: date time tz longitude [gender]
+ *   node .claude/calc/cast.mjs 1990-05-20 08:30 8 114 22.3 female  # date time tz lon [lat] [gender]
+ *     (latitude is needed for the Vedic ascendant; omit it and the Lagna defaults to the equator)
  *   node .claude/calc/cast.mjs --clock                 # use raw clock time
  *   node .claude/calc/cast.mjs --both                  # show both hour conventions
  */
@@ -24,7 +25,13 @@ let inp = { ...CANON };
 if (pos.length >= 2) {
   const [Y, M, D] = pos[0].split("-").map(Number);
   const [h, mi] = pos[1].split(":").map(Number);
-  inp = { y: Y, m: M, d: D, hour: h, minute: mi || 0, tz: pos[2] ? +pos[2] : 8, longitude: pos[3] ? +pos[3] : 120, gender: pos[4] || "male" };
+  // pos: date time [tz] [lon] [lat] [gender]. Latitude is optional; if omitted, gender may sit in
+  // its slot — detect numeric vs gender-string so old `… lon gender` calls still work.
+  const isNum = (s) => s !== undefined && s !== "" && !isNaN(+s);
+  const lat = isNum(pos[4]) ? +pos[4] : undefined;
+  const gender = (isNum(pos[4]) ? pos[5] : pos[4]) || "male";
+  inp = { y: Y, m: M, d: D, hour: h, minute: mi || 0, tz: pos[2] ? +pos[2] : 8, longitude: pos[3] ? +pos[3] : 120, latitude: lat, gender };
+  if (lat === undefined) console.warn("  ⚠ no latitude given — Vedic Lagna/ascendant computed at the EQUATOR (lat 0); pass a 5th positional latitude for the real ascendant.");
 }
 const isCanon = JSON.stringify(inp) === JSON.stringify(CANON);
 
