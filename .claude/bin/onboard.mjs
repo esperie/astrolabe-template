@@ -230,6 +230,7 @@ process.exit(fail ? 1 : 0);
 const canonPath = path.join(INSTANCE, ".claude/canon/canon.md");
 const testPath = path.join(INSTANCE, ".claude/calc/canon-consistency.test.mjs");
 const extraPath = path.join(INSTANCE, ".claude/calc/eval-extra.json");
+const birthPath = path.join(INSTANCE, ".claude/calc/birth.json");
 
 if (fs.existsSync(canonPath) && !FORCE && !DRY) {
   console.error(`✗ canon already exists at ${canonPath}. Use --force to overwrite (it is amended via canon-amend.mjs once live).`);
@@ -246,7 +247,10 @@ fs.mkdirSync(path.dirname(canonPath), { recursive: true });
 fs.writeFileSync(canonPath, canon);
 fs.writeFileSync(testPath, test);
 if (!fs.existsSync(extraPath)) fs.writeFileSync(extraPath, "{}\n");
-console.log(`\n  ✓ wrote canon.md + canon-consistency.test.mjs`);
+// Per-instance default chart for cast.mjs (PERSONAL — never synced/promoted). Repoints /cast's
+// no-arg default at the owner instead of the template's public sample.
+fs.writeFileSync(birthPath, JSON.stringify({ label: `${name} (canon)`, ...I }) + "\n");
+console.log(`\n  ✓ wrote canon.md + canon-consistency.test.mjs + birth.json`);
 
 console.log(`  re-validating …`);
 try {

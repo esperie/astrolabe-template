@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * cast.mjs — one-shot CLI that casts 八字 + 紫微 + 奇门 + 吠陀 for a birth datetime, from the
- * validated calculators (never hand-computed). In the template this defaults to a PUBLIC sample
- * (Albert Einstein); onboarding repoints the default at the instance owner's birth data.
+ * validated calculators (never hand-computed). The default chart is loaded from a per-instance
+ * .claude/calc/birth.json (PERSONAL, never synced/promoted) — the owner's birth data, written by
+ * onboarding. With no birth.json (the bare template) it falls back to a PUBLIC sample (Einstein).
  *
  *   node .claude/calc/cast.mjs                         # the default sample chart
  *   node .claude/calc/cast.mjs 1990-05-20 08:30 8 114 22.3 female  # date time tz lon [lat] [gender]
@@ -10,18 +11,25 @@
  *   node .claude/calc/cast.mjs --clock                 # use raw clock time
  *   node .claude/calc/cast.mjs --both                  # show both hour conventions
  */
+import fs from "node:fs";
 import bazi from "./bazi.js";
 import ziwei from "./ziwei.js";
 import qimen from "./qimen.js";
 import vedic from "./vedic.js";
 
-// Template default = a PUBLIC sample chart (Albert Einstein, AA-rated). Onboarding repoints this
-// at the instance owner's birth data. No personal data ships in the template.
-const CANON = { y: 1879, m: 3, d: 14, hour: 11, minute: 30, tz: 40 / 60, longitude: 9.99, latitude: 48.40, gender: "male" };
+// Default chart: a per-instance .claude/calc/birth.json (PERSONAL — never synced or promoted) holds
+// the owner's birth data, written at onboarding. The bare template ships none and falls back to a
+// PUBLIC sample (Albert Einstein, AA-rated), so the framework runs standalone with zero personal data.
+const PUBLIC_SAMPLE = { label: "SAMPLE — A. Einstein (public)", y: 1879, m: 3, d: 14, hour: 11, minute: 30, tz: 40 / 60, longitude: 9.99, latitude: 48.40, gender: "male" };
+let CANON = PUBLIC_SAMPLE;
+try { CANON = JSON.parse(fs.readFileSync(new URL("./birth.json", import.meta.url), "utf8")); }
+catch (e) { if (e.code !== "ENOENT") throw e; }
+const CANON_LABEL = CANON.label || "CHART";
+const { label: _label, ...CANON_CHART } = CANON;   // strip the display label from the chart input
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter((a) => a.startsWith("--")));
 const pos = argv.filter((a) => !a.startsWith("--"));
-let inp = { ...CANON };
+let inp = { ...CANON_CHART };
 if (pos.length >= 2) {
   const [Y, M, D] = pos[0].split("-").map(Number);
   const [h, mi] = pos[1].split(":").map(Number);
@@ -33,11 +41,11 @@ if (pos.length >= 2) {
   inp = { y: Y, m: M, d: D, hour: h, minute: mi || 0, tz: pos[2] ? +pos[2] : 8, longitude: pos[3] ? +pos[3] : 120, latitude: lat, gender };
   if (lat === undefined) console.warn("  ⚠ no latitude given — Vedic Lagna/ascendant computed at the EQUATOR (lat 0); pass a 5th positional latitude for the real ascendant.");
 }
-const isCanon = JSON.stringify(inp) === JSON.stringify(CANON);
+const isCanon = JSON.stringify(inp) === JSON.stringify(CANON_CHART);
 
 const b = bazi.computeChart(inp);
 const P = b.pillars;
-console.log(`\n════ ${isCanon ? "SAMPLE — A. Einstein (public)" : "CHART"} — ${inp.y}-${String(inp.m).padStart(2, "0")}-${String(inp.d).padStart(2, "0")} ${String(inp.hour).padStart(2, "0")}:${String(inp.minute).padStart(2, "0")} tz${inp.tz} lon${inp.longitude} ${inp.gender} ════`);
+console.log(`\n════ ${isCanon ? CANON_LABEL : "CHART"} — ${inp.y}-${String(inp.m).padStart(2, "0")}-${String(inp.d).padStart(2, "0")} ${String(inp.hour).padStart(2, "0")}:${String(inp.minute).padStart(2, "0")} tz${inp.tz} lon${inp.longitude} ${inp.gender} ════`);
 console.log(`true-solar hour ≈ ${b.trueSolarHours.toFixed(2)}`);
 
 console.log(`\n── 八字 (true-solar) ──`);

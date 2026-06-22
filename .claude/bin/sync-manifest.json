@@ -26,6 +26,8 @@
     ".claude/canon/**",
     ".claude/calc/canon-consistency.test.mjs",
     ".claude/calc/eval-extra.json",
+    ".claude/calc/birth.json",
+    ".claude/bin/promote-deny.json",
     ".claude/rules/learned-instincts.md",
     ".claude/skills/01-personal-profile/**",
     ".claude/learning/**",
