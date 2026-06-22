@@ -1,8 +1,8 @@
 "use strict";
 /**
  * qimen.js — deterministic 奇门遁甲 (时家奇门, 转盘法). No natural-language math.
- * Validated against a professional "Qi Men Destiny Palace" reference reading (e.g. a chart casting
- * to [redacted] / [redacted reference chart]).
+ * Validated against a professional "Qi Men Destiny Palace" reference reading (定局 · 值符/值使 ·
+ * 八门/九星/八神 · Destiny Palace) and the 转盘 placement rules.
  * The per-instance owner's natal 命局 is recorded and validated in .claude/canon/canon.md.
  *
  * Defaults to the true-solar hour pillar (consistent with the bazi working-default hour chart).
