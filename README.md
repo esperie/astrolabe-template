@@ -10,6 +10,12 @@ red-team-to-convergence mandate).
 This is the **template** — the framework source of truth. Each person clones it into their own
 private instance and runs onboarding.
 
+> **New here? Start with [INTRODUCTION.md](INTRODUCTION.md)** — a plain-language guide for readers
+> who've never met these systems: what the four are, the philosophy that makes this different from
+> fortune-telling, what it's useful for, how a reading works, **how to set it up and run it inside
+> Claude Code (desktop)**, and when to use `high` vs `xhigh` vs `ultracode`. The quick start below
+> assumes you already know what you're looking at.
+
 ## Quick start
 
 ```bash
