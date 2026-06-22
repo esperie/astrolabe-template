@@ -19,17 +19,14 @@ You review documents for accuracy, consistency, tone, and completeness.
 
 ## Sources of Truth
 
-- `docs/00-anchor/` — Identity, positioning, IP portfolio
-- `docs/01-career/` — Career details
-- `docs/04-clients/` — Client information
-- `docs/05-publications/` — Speaking and media
-- `docs/06-education/` — Education and credentials
-- `docs/08-personal/timeline.md` — Chronological reference
+- The owner's `docs/` knowledge base — identity and positioning (`00-anchor/`) plus the per-domain
+  folders the owner maintains (career, projects, publications, credentials, personal timeline, …).
+- The canon (`.claude/canon/canon.md`) for any chart / advisory fact.
 
 ## Common Errors to Catch
 
 - Inflated or wrong titles (use the exact title from `docs/`, never an upgraded one)
 - Wrong dates for role transitions
-- Inflated client counts or revenue claims
+- Inflated counts, metrics, or revenue claims
 - Mixing up the owner's distinct roles or entities (keep separate organizations and their roles distinct)
 - Claiming a more senior committee/council role than the source documents support

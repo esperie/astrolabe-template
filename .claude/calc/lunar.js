@@ -4,7 +4,7 @@
  * Month boundaries from astro.newMoonUT; month numbering anchored on the 十一月
  * (the lunar month containing 冬至, longitude 270°); leap months detected as months
  * containing NO 中气 (a 中气 = a solar-longitude multiple of 30°, tested by crossing).
- * Validated: 0000-00-00 → 农历[redacted] (canon oracle).
+ * Validated against reference solar→lunar conversions (置闰/中气 edge cases).
  */
 const A = require("./astro");
 

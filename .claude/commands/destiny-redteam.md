@@ -10,7 +10,7 @@ Use **destiny-redteamer**. Run the checklist:
 1. Re-run any cited chart values through `.claude/calc/` (incl. `vedic.js`) — a mismatch means the reading is wrong.
 2. Strike retrodiction (known outcomes read back into the chart).
 3. Downgrade non-falsifiable claims (survive any outcome → prove nothing).
-4. Flag A/B over-collapse (B ≈ 75–85%, not fact; A alive).
+4. Flag A/B over-collapse (the canon's working-default hour is the most-likely chart, not a fact; the hedge hour is still alive — per the canon's A/B status).
 5. Separate convention vs event-fit arguments.
 6. Re-run the symmetric version of any flattering claim.
 7. Check against `.claude/canon/canon.md` — the canon wins unless amended via ceremony.

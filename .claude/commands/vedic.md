@@ -14,6 +14,6 @@ Give a plain-language Vedic reading anchored on the cast above (cite values, nev
 - **Karakas** (Atmakāraka = soul/career theme) and any tight conjunctions.
 - **D9 (Navāṁśa)** — strength check: note grahas that gain/lose dignity vs D1.
 
-Conventions (state if material): **sidereal, Lahiri ayanāṁśa**; **raw clock → UT** (no true-solar hour, unlike the bazi hour-pillar); Rahu/Ketu = **true node** (matches Jagannatha Hora). This calculator is validated star-by-star + dasha-dates against the user's JHora chart — flag any value that looks off rather than trusting it blindly.
+Conventions (state if material): **sidereal, Lahiri ayanāṁśa**; **raw clock → UT** (no true-solar hour, unlike the bazi hour-pillar); Rahu/Ketu = **true node** (matches Jagannatha Hora). This calculator is validated star-by-star + dasha-dates against a reference JHora chart — flag any value that looks off rather than trusting it blindly.
 
-Cross-system note: where the question is consequential, sanity-check the Vedic indication against the bazi 用神 ([redacted]) and the ziwei reading — surface agreement or genuine conflict, don't force a match.
+Cross-system note: where the question is consequential, sanity-check the Vedic indication against the bazi 用神/喜忌 (from the canon) and the ziwei reading — surface agreement or genuine conflict, don't force a match.

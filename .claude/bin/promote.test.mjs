@@ -39,9 +39,9 @@ try {
   fs.cpSync(REAL_TEMPLATE, TPL, { recursive: true });
   fs.cpSync(REAL_TEMPLATE, INST, { recursive: true });   // instance starts identical to template
 
-  // instance identity: a birth.json (owner = "Casimir"; longitude 0.0) + a personal file inside a
-  // framework dir. Tokens the scan must catch: "casimir", "0.0", "0.0".
-  w(INST, ".claude/calc/birth.json", JSON.stringify({ label: "Casimir Q (canon)", y: 1979, m: 12, d: 14, hour: 15, minute: 5, tz: 7.5, longitude: 0.0, latitude: 0.0, gender: "male" }) + "\n");
+  // instance identity: a birth.json (owner = "Casimir"; longitude 123.45) + a personal file inside a
+  // framework dir. Tokens the scan must catch: "casimir", "123.45", "67.89". (Synthetic fixture data.)
+  w(INST, ".claude/calc/birth.json", JSON.stringify({ label: "Casimir Q (canon)", y: 1988, m: 8, d: 8, hour: 9, minute: 0, tz: 8, longitude: 123.45, latitude: 67.89, gender: "male" }) + "\n");
   w(INST, ".claude/rules/learned-instincts.md", "# Learned Instincts\nMY evolved instincts — personal.\n");
   w(INST, ".claude/calc/eval-extra.json", '{ "private.test.mjs": { "expect": 9 } }\n');
 
@@ -78,14 +78,14 @@ try {
 
   // ── case 4: de-personalization scan — atomic fail-closed ──
   // one framework file gets an OWNER TOKEN, another gets a clean change in the SAME run.
-  w(INST, ".claude/rules/git.md", fs.readFileSync(path.join(INST, ".claude/rules/git.md"), "utf8") + "\nLEAK: born at longitude 0.0.\n");
+  w(INST, ".claude/rules/git.md", fs.readFileSync(path.join(INST, ".claude/rules/git.md"), "utf8") + "\nLEAK: born at longitude 123.45.\n");
   w(INST, ".claude/rules/security.md", fs.readFileSync(path.join(INST, ".claude/rules/security.md"), "utf8") + "\nCLEAN: a harmless note.\n");
   const gitTplBefore = h(path.join(TPL, ".claude/rules/git.md"));
   const secTplBefore = h(path.join(TPL, ".claude/rules/security.md"));
 
   const leak = run([]);
   ok("scan REFUSES the leaking file + exits 1", leak.code === 1 && /REFUSED/.test(leak.out) && /git\.md/.test(leak.out));
-  ok("scan reports the matched token", /103\.85/.test(leak.out));
+  ok("scan reports the matched token", /123\.45/.test(leak.out));
   ok("ATOMIC: leaking file NOT written to template", h(path.join(TPL, ".claude/rules/git.md")) === gitTplBefore);
   ok("ATOMIC: the CLEAN file in the same run was ALSO not written", h(path.join(TPL, ".claude/rules/security.md")) === secTplBefore);
 

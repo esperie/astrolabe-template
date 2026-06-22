@@ -13,7 +13,7 @@
  * NAMING NOTE — 地空 vs 天空: the 劫空 pair (placed symmetrically from 亥 by hour) is named
  * 地空/地劫 here. Some schools/software (e.g. LifeDNA) call the 子-side member 天空 instead —
  * SAME position, different label. A comparison showing 天空 where we emit 地空 is a naming
- * variant, NOT a placement mismatch. (Verified against the LifeDNA A-chart oracle, 2026-06.)
+ * variant, NOT a placement mismatch. (Verified against a LifeDNA reference chart.)
  */
 const bazi = require("./bazi.js");
 const astro = require("./astro.js");

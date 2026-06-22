@@ -40,7 +40,7 @@ validation oracle. Amend only via the ceremony in `rules/canon-protection.md`
 (`node .claude/bin/canon-amend.mjs …`). `canon-guard.js` + `settings.permissions.deny` block
 silent edits; `inject-canon.js` injects the guardrails every turn.
 
-### Calculators (`.claude/calc/`) — validated vs [reference], LifeDNA, Jagannatha Hora & JPL Horizons
+### Calculators (`.claude/calc/`) — validated vs professional 命理 reports, Jagannatha Hora & JPL Horizons
 | File | Covers | Tests |
 |---|---|---|
 | `astro.js` | Julian day, Meeus 日躔/节气, 真太阳时, 新月 | — |

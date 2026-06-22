@@ -8,8 +8,8 @@ and never leaves its instance.
 
 ## The model
 - **`template` is the master** — the de-personalized, public-validated source of truth.
-- **Work happens in the dev instance (`esperie`)**, then **rolls out**.
-- Every instance (`esperie`, `[instance]`, `[instance]`) carries the *generalized* framework — files identical
+- **Work happens in the dev instance**, then **rolls out**.
+- Every instance carries the *generalized* framework — files identical
   to template. Per-person facts are read at runtime from that instance's canon + `.claude/calc/birth.json`
   + `.claude/calc/eval-extra.json`. They are NEVER hardcoded in a framework file.
 
@@ -22,7 +22,7 @@ and never leaves its instance.
 2. **Roll out with the tools, never by hand-copying:**
    - `node template/.claude/bin/sync.mjs <instance>` — template → instance (additive, personal-safe).
    - `node template/.claude/bin/promote.mjs <instance>` — instance → template (the dangerous direction).
-   - `node template/.claude/bin/rollout.mjs [--from esperie] [--dry-run]` — promote dev→template
+   - `node template/.claude/bin/rollout.mjs [--from <dev-instance>] [--dry-run]` — promote dev→template
      (fail-closed gate) **then** sync template → ALL instances. One command, the normal path.
 3. **Keep the template de-personalized.** A framework file MUST carry ZERO per-person data. `promote`
    enforces it: it refuses **atomically** (zero writes for the whole run) any file containing owner
@@ -35,7 +35,7 @@ and never leaves its instance.
    Never commit a rollout whose instances did not return PASS.
 
 ## MUST NOT
-1. Never hand-edit a framework file directly in a non-dev instance (`[instance]`/`[instance]`) — the next sync
+1. Never hand-edit a framework file directly in a non-dev instance — the next sync
    reverts it. Make the change in the dev flow and roll out.
 2. Never put per-person data (birth data, pillars, name, client/IP terms) in a framework file — it
    belongs in canon / `birth.json` / `eval-extra.json` (personal, never promoted).

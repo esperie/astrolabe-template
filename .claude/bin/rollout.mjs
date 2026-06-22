@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
  * rollout.mjs — the full fan-out for the "develop in a working instance, roll out" workflow.
- *   1. PROMOTE framework changes UP from the dev instance (default: esperie) into the template.
+ *   1. PROMOTE framework changes UP from the dev instance (default set below) into the template.
  *   2. SYNC the template DOWN into every instance (the dev instance + its siblings).
  *
  * Promote runs first and is fail-closed: if its de-personalization scan refuses anything, or the
  * template fails to re-validate, the rollout ABORTS before syncing anything downward — so a leak or
  * a broken framework never propagates to the family instances.
  *
- *   node .claude/bin/rollout.mjs                 # promote esperie → template, then sync ALL instances
- *   node .claude/bin/rollout.mjs --dry-run       # preview every step, write nothing
- *   node .claude/bin/rollout.mjs --from [instance]  # use a different dev instance as the promote source
+ *   node .claude/bin/rollout.mjs                  # promote the dev instance → template, then sync ALL instances
+ *   node .claude/bin/rollout.mjs --dry-run        # preview every step, write nothing
+ *   node .claude/bin/rollout.mjs --from <instance> # use a different dev instance as the promote source
  *
  * Template-only (NOT in the framework set, so sync never copies it to an instance). Instances are
  * discovered as sibling dirs of the template that contain a .claude/.
