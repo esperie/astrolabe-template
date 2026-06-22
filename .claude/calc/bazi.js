@@ -1,14 +1,14 @@
 "use strict";
 /**
  * bazi.js — deterministic Four Pillars (八字) calculator. No natural-language math.
- * Validated against the [reference] oracle in .claude/canon/canon.md (see bazi.test.mjs).
+ * Validated against external professional oracles (see public-validation.test.mjs).
  *
  * Covers: four pillars (true-solar hour), 藏干, 十神, 纳音, 大运 (direction + start age +
  * sequence), 胎元, symbolic stars (天乙贵人 / 文昌 / 桃花 / 驿马 / 孤辰), 本命卦 / 八宅, and
  * monthly pillars for any solar year.
  *
  * VALIDATION STATUS: oracle-validated = pillars, 大运, 胎元, 纳音, 贵人, 文昌, 桃花, 驿马, 卦,
- * monthly pillars + 节 dates, 命宫 (validated against 3 reference charts). PENDING (flagged in output) = 孤辰.
+ * monthly pillars + 节 dates, 命宫 (validated on reference charts). PENDING (flagged in output) = 孤辰.
  */
 const A = require("./astro");
 
@@ -67,9 +67,8 @@ function monthBranchFromLongitude(lambda) {
 // 命宫 (Life Palace) — by 太阳过宫 (中气 month, NOT 节), per the classical rule and
 // the [reference] oracle. Invariant (oracle-validated, 子=0 indices):
 //   命宫支 + 中气月支 + 时支 ≡ 辰 (4)  →  mingIdx = 4 − midMonthIdx − hourIdx (mod 12).
-// Stem via 五虎遁 from the year stem. Validated against 5 independent [reference] reference charts
-//   (reference charts A–E), e.g. 0000-00-00 未时 → 甲戌 · 1992-06-28 辰时 → 丙午 · 1992-01-25 巳时 → 戊戌
-//   · 1985-01-01 申时 → 壬申 · 1983-04-24 巳时 → 己未.
+// Stem via 五虎遁 from the year stem. Validated against 5 independent professional reports
+// (reference charts A–E, spanning different year/month/gender/hour; predicted before reveal).
 // 中气 boundaries sit at 330°+k·30° of apparent solar longitude (15° past each 节).
 function lifePalace(lambda, hourBranchIdx, yStem) {
   const segMid = Math.floor(A.mod360(lambda - 330) / 30); // 0=寅's 中气 window …
@@ -99,12 +98,22 @@ function mingGua(solarYear, gender) {
   return { num, trigram: TRIGRAMS[num], group: EAST.has(num) ? "East" : "West" };
 }
 
-// 八宅 directions, per SPECIFIC gua (guas in the same E/W group differ — keying by group
-// was a bug). Validated against [reference] reports: 震3 (reference chart A), 兑7 (reference chart B). Others pending oracles.
-const GUA_DIRECTIONS = {
-  3: { 生气: "南", 天医: "北", 延年: "东南", 伏位: "东", 祸害: "西南", 五鬼: "西北", 六煞: "东北", 绝命: "西" },
-  7: { 生气: "西北", 天医: "西南", 延年: "东北", 伏位: "西", 祸害: "北", 五鬼: "南", 六煞: "东南", 绝命: "东" },
-};
+// 八宅 directions via the 游年翻卦 algorithm — covers ALL 8 gua deterministically (the old
+// 2-entry table only had 震3/兑7). Each trigram = 3 bits (bottom=1, middle=2, top=4; yang=1/yin=0);
+// flipping lines in the fixed sequence 上中下中上中下中 yields the 8 stars in order. 伏位 = self.
+// Validated: reproduces an East-group anchor (gua 3, all 8/8 vs reference) and a West-group
+// anchor (gua 7: 生气西北 / 绝命东) exactly.
+const TRIGRAM_BITS = { 坎: 2, 坤: 0, 震: 1, 巽: 6, 乾: 7, 兑: 3, 艮: 4, 离: 5 };
+const BITS_DIR = { 0: "西南", 1: "东", 2: "北", 3: "西", 4: "东北", 5: "南", 6: "东南", 7: "西北" };
+const GUA_STARS = ["生气", "五鬼", "延年", "六煞", "祸害", "天医", "绝命", "伏位"];
+const GUA_FLIPS = [4, 2, 1, 2, 4, 2, 1, 2]; // 上中下中上中下中
+function guaDirections(trigram) {
+  let b = TRIGRAM_BITS[trigram];
+  if (b == null) return null;
+  const out = {};
+  for (let i = 0; i < 8; i++) { b ^= GUA_FLIPS[i]; out[GUA_STARS[i]] = BITS_DIR[b]; }
+  return out;
+}
 
 // Symbolic stars (validated subset).
 const TIANYI = { // 天乙贵人 by day stem
@@ -200,7 +209,7 @@ function computeChart(o) {
   };
 
   const gua = mingGua(baziYear, gender);
-  const directions = GUA_DIRECTIONS[gua.num] || null;
+  const directions = guaDirections(gua.trigram);
 
   return {
     input: o,

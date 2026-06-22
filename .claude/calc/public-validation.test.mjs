@@ -42,6 +42,18 @@ ok("bazi 大运 seq 丙寅乙丑甲子癸亥壬戌辛酉庚申己未",
   b.luck.list.slice(0, 8).map((l) => l.gz).join(" ") === "丙寅 乙丑 甲子 癸亥 壬戌 辛酉 庚申 己未",
   b.luck.list.slice(0, 8).map((l) => l.gz).join(" "));
 ok("bazi 大运 start age ≈ 3", Math.round(b.luck.startAgeYears) === 3, b.luck.startAgeYears.toFixed(2));
+// 八宅 directions — all 8 gua resolve via 游年翻卦 (was a 2-entry gap); anchor 坎/离 beyond gua 3/7
+{
+  const dirs = {};
+  for (let yr = 1960; yr < 2000; yr++) for (const g of ["male", "female"]) {
+    const c = bazi.computeChart({ y: yr, m: 6, d: 15, hour: 12, minute: 0, tz: 8, longitude: 120, latitude: 30, gender: g });
+    dirs[c.gua.num] = c.gua.directions;
+  }
+  const allEight = [1, 2, 3, 4, 6, 7, 8, 9].every((n) => dirs[n] && Object.keys(dirs[n]).length === 8);
+  ok("bazi 八宅 all 8 gua resolve · 坎 生气东南 · 离 生气东",
+    allEight && dirs[1]?.生气 === "东南" && dirs[9]?.生气 === "东",
+    `allEight=${allEight} 坎=${dirs[1]?.生气} 离=${dirs[9]?.生气}`);
+}
 
 // ── 吠陀 Vedic (oracle: Lagna360 / AstroSage, Lahiri sidereal) ──
 const v = vedic.compute({ y: I.y, m: I.m, d: I.d, hour: I.hour, minute: I.minute, tz: I.tz, lon: I.longitude, lat: I.latitude });

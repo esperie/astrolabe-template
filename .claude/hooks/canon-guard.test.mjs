@@ -101,6 +101,8 @@ const cases = [
   ["Bash grep -i canon → allow", { tool_name: "Bash", tool_input: { command: "grep -i 用神 .claude/canon/canon.md" } }, {}, false],
   // but a destructive verb piped from find/xargs onto an ancestor must STILL deny
   ["Bash find . | xargs rm → deny", { tool_name: "Bash", tool_input: { command: "find . -name canon.md | xargs rm -f" } }, {}, true],
+  // node -e with arrow fn (=>) reading a .claude module — the `>` in `=>` is NOT a redirect
+  ["Bash node -e arrow fn under .claude → allow", { tool_name: "Bash", tool_input: { command: "node -e 'import(\".claude/calc/bazi.js\").then(m=>console.log(m.default.x[0]))'" } }, {}, false],
 ];
 
 let pass = 0,
