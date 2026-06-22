@@ -77,6 +77,14 @@ try {
   // 8. idempotent
   const app2 = run([]);
   ok("second apply is clean (no framework drift)", /created 0 · updated 0/.test(app2.out));
+
+  // 9. C2 — a symlink at a framework target must NOT clobber its (personal) link-target
+  const canonBytes = fs.readFileSync(path.join(INST, ".claude/canon/canon.md"));
+  fs.unlinkSync(path.join(INST, ".claude/calc/astro.test.mjs"));
+  fs.symlinkSync("../canon/canon.md", path.join(INST, ".claude/calc/astro.test.mjs")); // evil: point a framework file at the canon
+  run([]);
+  ok("C2: symlinked framework target does NOT clobber the canon", fs.readFileSync(path.join(INST, ".claude/canon/canon.md")).equals(canonBytes));
+  ok("C2: the symlink was replaced by a real framework file", !fs.lstatSync(path.join(INST, ".claude/calc/astro.test.mjs")).isSymbolicLink());
 } finally {
   fs.rmSync(INST, { recursive: true, force: true });
 }

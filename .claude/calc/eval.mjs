@@ -36,17 +36,27 @@ const META = {
   "astro.test.mjs":            { system: "astro (ephemeris core)", expect: 6,   oracle: "Meeus / known 节气 instants", residual: "—" },
   "public-validation.test.mjs":{ system: "public chart (Einstein)", expect: 14, oracle: "Astro-Databank AA · published BaZi · Lagna360/AstroSage · JPL", residual: "ziwei/qimen = regression locks (no public oracle); Moon ±0.3° (UT/ephemeris)" },
   "canon-consistency.test.mjs":{ system: "canon ↔ calculators",    expect: 7,   oracle: "instance canon.md §2/5/6/7/8/13", residual: "—", perPerson: true },
-  "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 61,  oracle: "deny/allow vectors",          residual: "—" },
+  "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 64,  oracle: "deny/allow vectors",          residual: "—" },
   "vet-gate.test.mjs":         { system: "vet-gate hook",           expect: 9,   oracle: "Stop-gate scenarios",         residual: "—" },
 };
 
 // Optional per-instance suite registrations — private oracle suites an instance adds beyond the
 // framework set (e.g. a family-tuned bazi.test). Lives in eval-extra.json (PERSONAL, never synced),
 // merged over the framework META so those suites get count-pinned too. Absent in the bare template.
+// HARDENED: eval-extra may only ADD suites — never redefine a framework suite's pin (M5) and never
+// claim the perPerson orphan-exemption except for canon-consistency (m1); unreadable file = fail
+// closed, not silently ignored (m2).
+const FRAMEWORK_KEYS = new Set(Object.keys(META));
 try {
   const extra = JSON.parse(fs.readFileSync(path.join(__dirname, "eval-extra.json"), "utf8"));
-  Object.assign(META, extra);
-} catch { /* no per-instance extras — fine */ }
+  for (const [k, v] of Object.entries(extra || {})) {
+    if (FRAMEWORK_KEYS.has(k)) { console.error(`  ⚠ eval-extra.json may not redefine framework suite "${k}" — ignored`); continue; }
+    if (v && v.perPerson) { console.error(`  ⚠ eval-extra.json: only canon-consistency may be perPerson — stripping from "${k}"`); v.perPerson = false; }
+    META[k] = v;
+  }
+} catch (e) {
+  if (e.code !== "ENOENT") { console.error(`  ✗ eval-extra.json present but unreadable (${e.message}) — failing closed`); process.exit(1); }
+}
 
 const flags = new Set(process.argv.slice(2));
 const json = flags.has("--json"), quiet = flags.has("--quiet");
@@ -81,7 +91,10 @@ for (const s of suites) {
     if (e.status == null) crash = e.message;
   }
   const tally = parseTally(out);
-  const ranOk = code === 0 && tally && tally.fail === 0;
+  // M4: don't trust the tally + exit code alone — a suite could print "5/5 passed" + exit 0 yet
+  // also emit a "FAIL …" line (miscount). Require no literal FAIL line, and pass===total.
+  const hasFailLine = /^FAIL\b/m.test(out);
+  const ranOk = code === 0 && tally && tally.fail === 0 && tally.pass === tally.total && !hasFailLine;
   const drift = meta.expect != null && tally && tally.pass !== meta.expect;
   const registered = !!META[s.file];
   const ok = ranOk && !drift && !crash;

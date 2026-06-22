@@ -48,13 +48,21 @@ if (path.resolve(INSTANCE) === TEMPLATE) {
 const hash = (p) => crypto.createHash("sha1").update(fs.readFileSync(p)).digest("hex");
 const norm = (rel) => rel.split(path.sep).join("/");
 
-// PERSONAL matcher: exact path, or a `dir/**` prefix.
+// PERSONAL matcher: exact path, or a `dir/**` prefix. Case-folded (macOS/Windows are
+// case-insensitive — `.claude/Canon/canon.md` must still match) and any `..` path is personal-blocked.
 function isPersonal(rel) {
-  const r = norm(rel);
-  return MANIFEST.personal.some((g) => {
+  const r = norm(rel).toLowerCase();
+  if (r.split("/").includes("..")) return true;   // never touch a traversal path
+  return MANIFEST.personal.some((g0) => {
+    const g = g0.toLowerCase();
     if (g.endsWith("/**")) { const base = g.slice(0, -3); return r === base || r.startsWith(base + "/"); }
     return r === g;
   });
+}
+// True iff `abs` is strictly inside INSTANCE (after the personal/traversal guards) — defense in depth.
+function insideInstance(abs) {
+  const root = path.resolve(INSTANCE) + path.sep;
+  return (path.resolve(abs) + path.sep).startsWith(root);
 }
 
 // Enumerate every framework source file (expand dirs recursively).
@@ -73,21 +81,32 @@ for (const f of MANIFEST.framework.files) if (fs.existsSync(path.join(TEMPLATE, 
 const created = [], updated = [], unchanged = [], skippedPersonal = [], removed = [];
 
 for (const rel of frameworkFiles) {
-  if (isPersonal(rel)) { skippedPersonal.push(rel); continue; }   // hard safety guard
+  if (isPersonal(rel)) { skippedPersonal.push(rel); continue; }   // hard safety guard (incl. ..-paths)
   const src = path.join(TEMPLATE, rel);
   const dst = path.join(INSTANCE, rel);
-  const exists = fs.existsSync(dst);
-  if (exists && hash(src) === hash(dst)) { unchanged.push(rel); continue; }
+  if (!insideInstance(dst)) { skippedPersonal.push(rel); continue; }
+  // C2: NEVER follow a symlink at the target — it could point at a personal file (canon!), and
+  // copyFileSync would write through it. Detect via lstat; replace the link with a real file.
+  let lst = null; try { lst = fs.lstatSync(dst); } catch {}
+  const isLink = !!lst?.isSymbolicLink();
+  const exists = lst != null;
+  if (!isLink && exists && hash(src) === hash(dst)) { unchanged.push(rel); continue; }
   (exists ? updated : created).push(rel);
-  if (!DRY && !CHECK) { fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(src, dst); }
+  if (!DRY && !CHECK) {
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    if (isLink) fs.unlinkSync(dst);            // drop the symlink (its target is left untouched)
+    fs.copyFileSync(src, dst);
+  }
 }
 
-// OBSOLETED: delete from instance (never if personal).
+// OBSOLETED: delete from instance (never if personal, never via .., never outside the instance).
 for (const rel of MANIFEST.obsoleted || []) {
   const r = norm(rel);
   if (isPersonal(r)) continue;
   const dst = path.join(INSTANCE, r);
-  if (fs.existsSync(dst)) { removed.push(r); if (!DRY && !CHECK) fs.rmSync(dst, { recursive: true, force: true }); }
+  if (!insideInstance(dst)) continue;
+  let lst = null; try { lst = fs.lstatSync(dst); } catch {}
+  if (lst) { removed.push(r); if (!DRY && !CHECK) { if (lst.isSymbolicLink()) fs.unlinkSync(dst); else fs.rmSync(dst, { recursive: true, force: true }); } }
 }
 
 const changes = created.length + updated.length + removed.length;

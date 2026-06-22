@@ -44,9 +44,21 @@ if (!name || !date || !time || tz == null || lon == null || lat == null || !gend
   console.error("usage: onboard.mjs --name N --date YYYY-MM-DD --time HH:MM --tz H --lon L --lat L --gender male|female [--instance dir] [--dry-run] [--force]");
   process.exit(2);
 }
+const die = (m) => { console.error(`  ✗ ${m}`); process.exit(2); };
+// M1/M2: validate ALL inputs up front — a bad tz/lon/lat/date silently produced a corrupt canon
+// (e.g. lat "oops" → Vedic "Lagna undefined NaN°") that still passed eval. Fail loudly instead.
+const numOrDie = (v, n, lo, hi) => { const x = +v; if (!Number.isFinite(x) || x < lo || x > hi) die(`${n} must be a number in [${lo},${hi}], got "${v}"`); return x; };
+const tzN = numOrDie(tz, "tz", -14, 14), lonN = numOrDie(lon, "lon", -180, 180), latN = numOrDie(lat, "lat", -90, 90);
+if (!/^\d{4}-\d{1,2}-\d{1,2}$/.test(date)) die(`date must be YYYY-MM-DD, got "${date}"`);
+if (!/^\d{1,2}:\d{2}$/.test(time)) die(`time must be HH:MM, got "${time}"`);
+if (!["male", "female"].includes(gender)) die(`gender must be male|female, got "${gender}"`);
 const [Y, M, D] = date.split("-").map(Number);
 const [h, mi] = time.split(":").map(Number);
-const I = { y: Y, m: M, d: D, hour: h, minute: mi || 0, tz: +tz, longitude: +lon, latitude: +lat, gender };
+// round-trip check: reject impossible calendar dates (1990-13-45, 1900-02-29) and out-of-range times
+const dchk = new Date(Date.UTC(Y, M - 1, D));
+if (dchk.getUTCFullYear() !== Y || dchk.getUTCMonth() + 1 !== M || dchk.getUTCDate() !== D) die(`impossible date "${date}"`);
+if (h < 0 || h > 23 || mi < 0 || mi > 59) die(`impossible time "${time}"`);
+const I = { y: Y, m: M, d: D, hour: h, minute: mi, tz: tzN, longitude: lonN, latitude: latN, gender };
 
 // ── cast all four (import the instance's calculators so onboarding validates THAT engine) ──
 const calc = (f) => import(path.join(INSTANCE, ".claude/calc", f));
@@ -63,10 +75,18 @@ const monthBranch = P.month.gz[1];
 const luckSeq = b.luck.list.map((l) => `${l.gz}(${l.startAge})`).join(" · ");
 const luck5 = b.luck.list.slice(0, 4).map((l) => l.gz).join(" ");
 
-// A/B hour fork: does the hour pillar differ true-solar vs raw-clock?
-const bClock = bazi.computeChart({ ...I, longitude: +tz * 15 });   // align longitude to tz meridian → ~no solar shift
+// A/B hour sensitivity has TWO independent causes (M3 — the old single check conflated them):
+//  (1) CONVENTION fork: true-solar (real lon) vs raw-clock (tz meridian) give different hour pillars.
+//  (2) BOUNDARY proximity: the true-solar hour sits within ~16 min of a 时辰 edge (odd true-solar
+//      hours), so a small birth-time error would flip the pillar to the adjacent 时辰.
+const bClock = bazi.computeChart({ ...I, longitude: tzN * 15 });   // raw-clock = tz central meridian
 const hourClock = bClock.pillars.hour.gz;
-const abFork = hourClock !== P.hour.gz;
+const convFork = hourClock !== P.hour.gz;
+const tsh = b.trueSolarHours;                                       // true-solar hour (decimal)
+const edgeFrac = ((tsh + 1) % 2 + 2) % 2;                           // 0 at a 时辰 edge (odd hours)
+const edgeMin = Math.min(edgeFrac, 2 - edgeFrac) * 60;             // minutes to the nearest 时辰 edge
+const boundaryNear = edgeMin <= 16;
+const abFork = convFork || boundaryNear;
 
 const z = ziwei.chartFromSolar({ ...I, useTrueSolar: true });
 const sihua = `${z.sihua.禄}禄 ${z.sihua.权}权 ${z.sihua.科}科 ${z.sihua.忌}忌`;
@@ -82,7 +102,7 @@ const md = v.dasha.map((n) => `${n.lord}(${vedic.jdToDateStr(n.startJD).slice(0,
 const guard = `<!-- GUARDRAILS:START -->
 [CANON] Destiny advisory — protected (.claude/canon/canon.md). Chart math = ALWAYS the calculators in .claude/calc/, NEVER mental arithmetic.
 • Owner: ${name}. Born ${date} ${time} (tz${tz}, lon${lon}, lat${lat}), ${gender}.
-• Pillars (true-solar): 年${P.year.gz} 月${P.month.gz} 日${P.day.gz} 时${P.hour.gz}. Day Master ${dm}, born ${monthBranch}月.${abFork ? " ⚠ HOUR is near a 时辰 boundary — A/B fork live (§3)." : ""}
+• Pillars (true-solar): 年${P.year.gz} 月${P.month.gz} 日${P.day.gz} 时${P.hour.gz}. Day Master ${dm}, born ${monthBranch}月.${abFork ? ` ⚠ HOUR A/B-sensitive (${[convFork ? "convention" : "", boundaryNear ? "boundary" : ""].filter(Boolean).join("+")}) — see §3.` : ""}
 • 用神 / favourable elements: ⏳ AWAITING ANALYSIS — to be authored by the bazi-analyst (§4). Do not assert until filled.
 • Spine (upcoming 大运/流年): ⏳ AWAITING ANALYSIS (§9).
 • Method: triangulate all four systems; symmetric red-team, falsifiability-first, no retrodiction; A/B forks → low-regret. Verify in canon; don't re-derive.
@@ -113,9 +133,9 @@ ${guard}
 
 ## 3. A/B hour status
 ${abFork
-    ? `- ⚠ **A/B fork is LIVE.** True-solar → hour **${P.hour.gz}** (working default, "B"). Raw-clock → **${hourClock}** ("A").
-- ⏳ AWAITING ANALYSIS: assess P(A) vs P(B) (true-solar convention vs recorded-time reliability), and dual-track any hour-dependent read. Never silently collapse A/B.`
-    : `- Hour pillar **${P.hour.gz}** is robust (birth time is not near a 时辰 boundary; true-solar and raw-clock agree). No material A/B fork.`}
+    ? `- ⚠ **A/B hour sensitivity is LIVE.**${convFork ? ` **Convention fork:** true-solar → **${P.hour.gz}** (working default), raw-clock/standard-meridian → **${hourClock}**.` : ""}${boundaryNear ? ` **Boundary proximity:** true-solar hour ≈ ${tsh.toFixed(2)}h is only ~${Math.round(edgeMin)} min from a 时辰 edge — a small birth-time error would flip the hour pillar to the adjacent 时辰 (the alternative ≈ ${hourClock === P.hour.gz ? "the neighbouring 时辰" : hourClock}).` : ""}
+- ⏳ AWAITING ANALYSIS: assess the probabilities (true-solar convention vs recorded-time reliability), dual-track any hour-dependent read, and never silently collapse the alternatives.`
+    : `- Hour pillar **${P.hour.gz}** is robust: true-solar (≈ ${tsh.toFixed(2)}h, ~${Math.round(edgeMin)} min from the nearest 时辰 edge) and raw-clock agree. No material A/B fork.`}
 
 ## 4. 用神 — favourable / unfavorable elements
 - ⏳ **AWAITING ANALYSIS.** Determine 身强/身弱, 调候 needs, and the favorable/忌 elements via the

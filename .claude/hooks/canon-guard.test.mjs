@@ -101,8 +101,15 @@ const cases = [
   ["Bash grep -i canon → allow", { tool_name: "Bash", tool_input: { command: "grep -i 用神 .claude/canon/canon.md" } }, {}, false],
   // but a destructive verb piped from find/xargs onto an ancestor must STILL deny
   ["Bash find . | xargs rm → deny", { tool_name: "Bash", tool_input: { command: "find . -name canon.md | xargs rm -f" } }, {}, true],
-  // node -e with arrow fn (=>) reading a .claude module — the `>` in `=>` is NOT a redirect
-  ["Bash node -e arrow fn under .claude → allow", { tool_name: "Bash", tool_input: { command: "node -e 'import(\".claude/calc/bazi.js\").then(m=>console.log(m.default.x[0]))'" } }, {}, false],
+  // ── arrows are ambiguous with redirects → fail SAFE (deny), and the glob+arrow bypass MUST deny ──
+  // node -e with `=>` AND a glob char (`[`) under .claude is conservatively blocked (was a bypass
+  // when we stripped arrows; use a temp .mjs to read instead). Fail-safe, not a hole.
+  ["Bash node -e arrow+glob under .claude → deny (fail-safe)", { tool_name: "Bash", tool_input: { command: "node -e 'import(\".claude/calc/bazi.js\").then(m=>console.log(m.default.x[0]))'" } }, {}, true],
+  // C1 regression: glob-obscured canon path + arrow-preceded redirect must DENY (was the bypass)
+  ["Bash arrow-redirect glob canon → deny", { tool_name: "Bash", tool_input: { command: "echo x ->.claude/can[o]n/canon.md" } }, {}, true],
+  ["Bash =>redirect glob canon → deny", { tool_name: "Bash", tool_input: { command: "echo x =>.claude/c*/canon.md" } }, {}, true],
+  // node -e WITHOUT a glob char reading a .claude module still allowed (no EXPANSION → rule 4 quiet)
+  ["Bash node -e arrow no-glob under .claude → allow", { tool_name: "Bash", tool_input: { command: "node -e 'import(\".claude/calc/bazi.js\").then(m=>console.log(m.default.foo))'" } }, {}, false],
 ];
 
 let pass = 0,

@@ -86,9 +86,12 @@ function hasWriteVerb(cmd) {
 // A redirect that actually writes a real file. Harmless stderr/merge/devnull redirects
 // (2>/dev/null, >/dev/null, 2>&1, &>/dev/null) are stripped first so they don't count —
 // a real canon target would still be caught as a canon path token or under .claude.
+// NOTE: we do NOT strip `=>`/`->` arrows. They are syntactically ambiguous with a real bash
+// redirect (`echo x =>file` IS `echo x =` + `>file`), so stripping them opened a canon-write
+// bypass (`echo x ->.claude/can[o]n/canon.md`). We fail SAFE: a `node -e '…=>…'` that also
+// contains a glob char AND a .claude path is conservatively blocked (use a temp .mjs instead).
 function hasWriteRedirect(cmd) {
   const stripped = cmd
-    .replace(/[=-]>/g, "")                       // arrow tokens (=>, ->) are NOT redirects (node -e, comparisons)
     .replace(/[0-9]*>>?\s*\/dev\/null/g, "")
     .replace(/&>>?\s*\/dev\/null/g, "")
     .replace(/[0-9]*>&[0-9]?-?/g, "");
