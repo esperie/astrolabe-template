@@ -1,7 +1,7 @@
 "use strict";
 /**
  * qimen.js — deterministic 奇门遁甲 (时家奇门, 转盘法). No natural-language math.
- * Validated against a [reference] "Qi Men Destiny Palace" reference reading (e.g. a chart casting
+ * Validated against a professional "Qi Men Destiny Palace" reference reading (e.g. a chart casting
  * to [redacted] / [redacted reference chart]).
  * The per-instance owner's natal 命局 is recorded and validated in .claude/canon/canon.md.
  *
@@ -37,7 +37,7 @@ function jiaziIndex(stem, branch) {
   return -1;
 }
 
-/** Cast the chart. useTrueSolar default true (B / 未时, consistent with [reference]). */
+/** Cast the chart. useTrueSolar default true (B / 未时, per the professional reference convention). */
 function cast({ y, m, d, hour, minute = 0, tz, longitude, useTrueSolar = true }) {
   const b = bazi.computeChart({ y, m, d, hour, minute, tz, longitude });
   const dayStem = b.pillars.day.stem;
@@ -119,7 +119,7 @@ function cast({ y, m, d, hour, minute = 0, tz, longitude, useTrueSolar = true })
   }
   chart[qinTarget].tianStarAlt = "天禽"; chart[qinTarget].tianStemAlt = dipan[5];
 
-  // ── Destiny Palace = palace of 天盘日干; door = 值使门 ([reference] convention) ──
+  // ── Destiny Palace = palace of 天盘日干; door = 值使门 (professional reference convention) ──
   let destinyPalace; for (const pp in tianStem) if (tianStem[pp] === dayStem) destinyPalace = +pp;
   if (destinyPalace === undefined && dipan[5] === dayStem) destinyPalace = 2; // 中宫寄坤二: 日干天盘落中宫 → 寄坤2
   const destiny = {

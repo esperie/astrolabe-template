@@ -110,6 +110,27 @@ const cases = [
   ["Bash =>redirect glob canon → deny", { tool_name: "Bash", tool_input: { command: "echo x =>.claude/c*/canon.md" } }, {}, true],
   // node -e WITHOUT a glob char reading a .claude module still allowed (no EXPANSION → rule 4 quiet)
   ["Bash node -e arrow no-glob under .claude → allow", { tool_name: "Bash", tool_input: { command: "node -e 'import(\".claude/calc/bazi.js\").then(m=>console.log(m.default.foo))'" } }, {}, false],
+  // ── round-4: read-only over-trigger fix — cd-led reads + strict `sed -n` reads (must ALLOW) ──
+  ["Bash cd canon && grep → allow", { tool_name: "Bash", tool_input: { command: "cd .claude/canon && grep -n 用神 canon.md" } }, {}, false],
+  ["Bash cd canon && cat → allow", { tool_name: "Bash", tool_input: { command: "cd .claude/canon && cat canon.md" } }, {}, false],
+  ["Bash cd canon ; head → allow", { tool_name: "Bash", tool_input: { command: "cd .claude/canon ; head -20 canon.md" } }, {}, false],
+  ["Bash cd canon && cat | grep → allow", { tool_name: "Bash", tool_input: { command: "cd .claude/canon && cat canon.md | grep 大运" } }, {}, false],
+  ["Bash sed -n range canon → allow", { tool_name: "Bash", tool_input: { command: "sed -n '1,5p' .claude/canon/canon.md" } }, {}, false],
+  ["Bash sed -n with `;` canon → deny (tokenizer splits `;`)", { tool_name: "Bash", tool_input: { command: "sed -n '10p;20p' .claude/canon/canon.md" } }, {}, true],
+  ["Bash cat canon | sed -n → allow", { tool_name: "Bash", tool_input: { command: "cat .claude/canon/canon.md | sed -n '2,8p'" } }, {}, false],
+  // ── round-4 adversarial: the fix must NOT open a write bypass (must DENY) ──
+  ["Bash cd canon && rm → deny", { tool_name: "Bash", tool_input: { command: "cd .claude/canon && rm canon.md" } }, {}, true],
+  ["Bash cd canon && sed -i → deny", { tool_name: "Bash", tool_input: { command: "cd .claude/canon && sed -i '' s/a/b/ canon.md" } }, {}, true],
+  ["Bash cd canon && echo >> → deny", { tool_name: "Bash", tool_input: { command: "cd .claude/canon && echo x >> canon.md" } }, {}, true],
+  ["Bash cd canon && tee → deny", { tool_name: "Bash", tool_input: { command: "cd .claude/canon && tee canon.md" } }, {}, true],
+  ["Bash cd /tmp && cd canon && rm → deny", { tool_name: "Bash", tool_input: { command: "cd /tmp && cd .claude/canon && rm canon.md" } }, {}, true],
+  ["Bash cd canon && node read → deny (unknown verb)", { tool_name: "Bash", tool_input: { command: "cd .claude/canon && node read.mjs canon.md" } }, {}, true],
+  ["Bash sed -n with w-command → deny", { tool_name: "Bash", tool_input: { command: "sed -n '1,5p;w /tmp/x' .claude/canon/canon.md" } }, {}, true],
+  ["Bash sed s///w canon → deny", { tool_name: "Bash", tool_input: { command: "sed -n 's/a/b/w out' .claude/canon/canon.md" } }, {}, true],
+  ["Bash sed -n then rm canon → deny", { tool_name: "Bash", tool_input: { command: "sed -n '1,5p' .claude/canon/canon.md && rm .claude/canon/canon.md" } }, {}, true],
+  ["Bash awk read canon → deny (by design)", { tool_name: "Bash", tool_input: { command: "awk 'NR<5' .claude/canon/canon.md" } }, {}, true],
+  ["Bash cd canon newline cat → allow", { tool_name: "Bash", tool_input: { command: "cd .claude/canon\ncat canon.md" } }, {}, false],
+  ["Bash cd canon newline rm → deny", { tool_name: "Bash", tool_input: { command: "cd .claude/canon\nrm canon.md" } }, {}, true],
 ];
 
 let pass = 0,

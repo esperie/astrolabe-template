@@ -65,7 +65,7 @@ function monthBranchFromLongitude(lambda) {
 }
 
 // 命宫 (Life Palace) — by 太阳过宫 (中气 month, NOT 节), per the classical rule and
-// the [reference] oracle. Invariant (oracle-validated, 子=0 indices):
+// a professional reference oracle. Invariant (oracle-validated, 子=0 indices):
 //   命宫支 + 中气月支 + 时支 ≡ 辰 (4)  →  mingIdx = 4 − midMonthIdx − hourIdx (mod 12).
 // Stem via 五虎遁 from the year stem. Validated against 5 independent professional reports
 // (reference charts A–E, spanning different year/month/gender/hour; predicted before reveal).
@@ -130,7 +130,7 @@ function trinityStars(branch) {
   for (const g in groups) if (g.includes(branch)) return groups[g];
   return {};
 }
-// 孤辰 by (day) branch group — method matched to the [reference] oracle (卯→巳). Flagged pending.
+// 孤辰 by (day) branch group — method matched to the reference oracle (卯→巳). Flagged pending.
 function guChen(branch) {
   if ("亥子丑".includes(branch)) return "寅";
   if ("寅卯辰".includes(branch)) return "巳";
@@ -191,7 +191,7 @@ function computeChart(o) {
   const luck = [];
   for (let k = 0; k < 10; k++) {
     const idx = forward ? monthIdx60 + 1 + k : monthIdx60 - 1 - k;
-    luck.push({ gz: gzFromIndex(idx), startAge: Math.round(startAgeYears) + 10 * k }); // round ([reference] convention)
+    luck.push({ gz: gzFromIndex(idx), startAge: Math.round(startAgeYears) + 10 * k }); // round (standard 大运 convention)
   }
 
   // ── 胎元 / 命宫 ──

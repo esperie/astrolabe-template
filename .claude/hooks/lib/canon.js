@@ -42,6 +42,28 @@ function isCanonPath(filePath, data) {
 
 // Provably read-only leading command (no file-write path). `find` is NOT here — `-exec` writes.
 const READONLY_LEAD = /^(?:sudo\s+)?(?:cat|bat|less|more|grep|egrep|fgrep|rg|head|tail|wc|stat|diff|cmp|file|ls|md5|md5sum|sha1sum|sha256sum|shasum|cksum)\b/;
+// A `sed` invocation that can ONLY print a line number/range — `-n` mode, script restricted to
+// digits/commas/`p`/`$` (NO `;`: the shell-connector tokenizer splits on `;` before this is
+// tested, so a `;`-containing script can't be reasoned about quote-naively → left blocked). This
+// grammar admits NO file-writing sed command (`w`, `W`, `s///w`), NO regex address, and NO
+// in-place flag, so it is provably read-only. awk is NOT given an analogue: its `print >`,
+// `printf|"cmd"`, `system()` writes cannot be statically proven absent without re-opening a bypass
+// (cf. the reverted arrow-strip) — use `sed -n`, `head|tail`, or grep.
+const SAFE_SED_READ = /^g?sed\s+-n\s+(['"])\s*[0-9,p$\s]+\1(?:\s+[^\s;|&<>]+)?\s*$/;
+// Strip leading `cd <plain-path> (&&|;)` segments so a read pipeline that merely `cd`s first
+// (`cd .claude/canon && grep X canon.md`) can still be recognised as read-only. The cd arg is
+// plain path chars ONLY (no space/quote/expansion metachars), so a command-substitution or
+// redirect can never hide inside it; anything fancier simply isn't stripped (fail-safe).
+function stripLeadingCd(cmd) {
+  return cmd.replace(/^\s*(?:cd\s+[A-Za-z0-9_.\/~@:+-]+[ \t]*(?:&&|;|\n)\s*)+/, "");
+}
+// Does the command (after cd-strip) LEAD with a known read-only command? Positive allowlist gate:
+// it only flips provablyReadOnly true when `!writeCapable` already holds, and it requires a KNOWN
+// reader at the head — an unknown verb after `cd` stays blocked.
+function leadIsReadOnly(cmd) {
+  const firstSeg = stripLeadingCd(cmd).trim().split(/\|\||\||&&|&|;|\n/)[0].trim();
+  return READONLY_LEAD.test(firstSeg) || SAFE_SED_READ.test(firstSeg);
+}
 // Commands that write/modify files. Matched at COMMAND POSITION only (see hasWriteVerb) so a
 // verb appearing inside a path/arg (e.g. `eval` in `.claude/calc/eval.mjs`, `tar` in `target/`)
 // does NOT count. `xargs` is handled specially (write only if it invokes a write verb).
@@ -78,7 +100,11 @@ function hasWriteVerb(cmd) {
       }
       continue;
     }
-    if (WRITE_VERBS.has(base)) return true;
+    if (WRITE_VERBS.has(base)) {
+      // a strict `sed -n '<line-ranges>'` cannot write a file — don't treat it as a write verb
+      if ((base === "sed" || base === "gsed") && SAFE_SED_READ.test(seg.trim())) continue;
+      return true;
+    }
   }
   return false;
 }
@@ -118,7 +144,7 @@ function bashTouchesCanon(command, data) {
 
   const writeVerb = hasWriteVerb(cmd);                 // command-position write verb (sed/perl/rm/…)
   const writeCapable = hasWriteRedirect(cmd) || FIND_WRITE.test(cmd) || writeVerb;
-  const provablyReadOnly = !writeCapable && READONLY_LEAD.test(cmd.trim());
+  const provablyReadOnly = !writeCapable && leadIsReadOnly(cmd);
 
   const root = projectDir(data), dir = canonDir(data);
   let canonHit = false, ancestorHit = false, dotClaude = false;

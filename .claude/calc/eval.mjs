@@ -36,7 +36,7 @@ const META = {
   "astro.test.mjs":            { system: "astro (ephemeris core)", expect: 6,   oracle: "Meeus / known 节气 instants", residual: "—" },
   "public-validation.test.mjs":{ system: "public chart (Einstein)", expect: 14, oracle: "Astro-Databank AA · published BaZi · Lagna360/AstroSage · JPL", residual: "ziwei/qimen = regression locks (no public oracle); Moon ±0.3° (UT/ephemeris)" },
   "canon-consistency.test.mjs":{ system: "canon ↔ calculators",    expect: 7,   oracle: "instance canon.md §2/5/6/7/8/13", residual: "—", perPerson: true },
-  "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 64,  oracle: "deny/allow vectors",          residual: "—" },
+  "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 83,  oracle: "deny/allow vectors",          residual: "—" },
   "vet-gate.test.mjs":         { system: "vet-gate hook",           expect: 9,   oracle: "Stop-gate scenarios",         residual: "—" },
 };
 
@@ -125,7 +125,7 @@ if (json) {
     }
     if (orphanMeta.length) console.log(`\n  ✗ ORPHAN META (registered suite missing from disk — coverage lost): ${orphanMeta.join(", ")}`);
     if (unregistered.length) console.log(`\n  ⚠ UNREGISTERED (ran, but no count-pin — add a META entry): ${unregistered.join(", ")}`);
-    console.log(`\n  oracles: [reference] · LifeDNA · Jagannatha Hora · JPL Horizons · Meeus/转盘 rules`);
+    console.log(`\n  oracles: professional 命理 reports · Jagannatha Hora · JPL Horizons · Meeus/转盘 rules`);
   }
   const warn = unregistered.length ? ` · ⚠${unregistered.length} unregistered` : "";
   console.log(`\n  VERDICT: ${allOk ? "PASS" : "FAIL"} — ${results.filter((r) => r.ok).length}/${results.length} suites, ${totalPass} assertions passing${warn}\n`);
