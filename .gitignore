@@ -1,0 +1,14 @@
+# Astrolabe instance — keep it private; never commit secrets.
+node_modules/
+.DS_Store
+*.log
+
+# Playwright MCP scratch (if used for oracle validation)
+.playwright-mcp/
+
+# Local editor / OS noise
+.vscode/
+.idea/
+
+# NOTE: .claude/canon/canon.md (your birth data) is committed by design — it is the
+# protected source of truth. Keep the WHOLE repo private (rules/security.md).
