@@ -1,0 +1,81 @@
+{
+  "_meta": {
+    "purpose": "COC-domain model benchmark — tasks. This is the PUBLIC TEMPLATE: prompts are generic, but the `oracle` / `reference` / `rubric` fields are PLACEHOLDERS. Each private instance copies this to `tasks.json` and fills the answers FROM ITS OWN CANON + calculators (never hand-computed). The filled tasks.json is personal and MUST NOT be committed to the template.",
+    "howToFill": "For each task: run the relevant calculator (node .claude/calc/cast.mjs etc.) and your canon, then set `oracle` (deterministic token groups every correct answer must contain — ALL groups must hit) and/or `reference`+`rubric` (authoritative answer + what good looks like, for the 3-dim judge). Keep the filled file private.",
+    "scoring": "Every interpretive task is graded by a strong judge model on THREE dimensions (completeness, accuracy, quality-of-interpretation), 0-5 each. Oracle tasks also get an independent deterministic factual cross-check (token match). Cross-cutting: ranCalc (used the calculators) + readKB (read canon/docs).",
+    "note": "All reference values MUST come FROM the calculators per rules/calc-authority.md — never hand-computed."
+  },
+  "tasks": [
+    {
+      "id": "bazi-pillars",
+      "kind": "oracle",
+      "expectsTools": true,
+      "prompt": "Using this repository's own tools/calculators (not your own knowledge), determine the instance owner's BaZi (八字) four pillars — 年柱 月柱 日柱 时柱 — and the Day Master. Report the four 干支 pairs and the Day Master, and briefly interpret the core picture.",
+      "oracle": [["<year 干支>"], ["<month 干支>"], ["<day 干支>"], ["<hour 干支>"], ["<Day Master stem+element>"]],
+      "reference": "<the four pillars, Day Master, 用神, 大运 direction, and any birth-hour A/B hedge — copied from your canon/cast>",
+      "rubric": "COMPLETENESS: all four pillars + Day Master (bonus: 用神/大运/hour-hedge). ACCURACY: pillars + DM exactly match the reference; computed via the calculator, no hand-math. QUALITY: clear, correct interpretation; flags any birth-hour ambiguity instead of asserting false certainty."
+    },
+    {
+      "id": "ziwei-ming",
+      "kind": "oracle",
+      "expectsTools": true,
+      "prompt": "Using this repository's tools, find the instance owner's 紫微斗数 chart: the 五行局, which main star(s) occupy the 命宫, and what the 四化 indicate. Interpret briefly.",
+      "oracle": [["<五行局>"], ["<命宫 main star 1>"], ["<命宫 main star 2>"]],
+      "reference": "<五行局, 命宫 stars, 命主/身主, the four 四化, 身宫 — from your ziwei cast>",
+      "rubric": "COMPLETENESS: 五行局 + 命宫 main star(s) (+ ideally 四化, 命主/身主). ACCURACY: matches the reference, computed via ziwei.js. QUALITY: coherent reading; no fabrication."
+    },
+    {
+      "id": "qimen-natal",
+      "kind": "oracle",
+      "expectsTools": true,
+      "prompt": "Using this repository's tools, cast the instance owner's natal 奇门遁甲 chart. State: (a) 阳遁 or 阴遁, (b) the 局 number, (c) the 值使门, (d) the 命局 palace; interpret briefly.",
+      "oracle": [["<阳遁 or 阴遁>"], ["<局 number>"], ["<值使门>"]],
+      "reference": "<遁/局/值符/值使门/命局 palace/星/神 — from your qimen cast>",
+      "rubric": "COMPLETENESS: 遁 + 局 + 值使门 (+ ideally 值符/星/神, 命局 palace). ACCURACY: matches the reference, cast via qimen.js (no 阴阳遁 confusion). QUALITY: correct, sensible interpretation."
+    },
+    {
+      "id": "vedic-lagna",
+      "kind": "oracle",
+      "expectsTools": true,
+      "prompt": "Using this repository's tools, compute the instance owner's Vedic (Jyotish) chart. State the Lagna and its nakshatra, the Moon's sign + nakshatra, and the current Vimśottari Mahādaśā; interpret briefly.",
+      "oracle": [["<Lagna sign>"], ["<Moon nakshatra>"]],
+      "reference": "<Lagna+nakshatra, Moon sign/nakshatra, current Mahādaśā, karakas — from your vedic cast (sidereal/Lahiri)>",
+      "rubric": "COMPLETENESS: Lagna+nakshatra + Moon + current daśā. ACCURACY: matches the reference, computed via vedic.js. QUALITY: correct Jyotish reading; cross-checks daśā vs the bazi spine; no fabrication."
+    },
+    {
+      "id": "title-fidelity",
+      "kind": "fact",
+      "expectsTools": false,
+      "prompt": "What is the instance owner's exact title at <a documented affiliation>? Quote it exactly as documented in this repository. Do not guess — if unsure, say so.",
+      "oracle": [["<the exact documented title string>"]],
+      "factOnly": true,
+      "_note": "An anti-fabrication probe: pick a fact in your docs/ that is easy to mis-state. Tests whether the model reads the KB vs. inventing."
+    },
+    {
+      "id": "yongshen",
+      "kind": "judge",
+      "expectsTools": false,
+      "prompt": "Per this repository's canon, summarize the instance owner's 用神 — which elements are favourable and which unfavourable — with the reason for each.",
+      "reference": "<favourable elements + roles, unfavourable elements + roles, hour-independence — from your canon>",
+      "rubric": "COMPLETENESS: both favourable AND both unfavourable elements with reasons. ACCURACY: element roles match the reference. QUALITY: explains the nuance; no inverted or fabricated elements."
+    },
+    {
+      "id": "decision-livefork",
+      "kind": "judge",
+      "heavy": true,
+      "expectsTools": true,
+      "prompt": "Should the instance owner take on <a specific, consequential live decision> in <a specific year>? Give a low-regret recommendation using this repository's four-system (八字/紫微/奇门/吠陀) method.",
+      "reference": "<the canon's reading for that year/decision: relevant stars/流年, the recurring risk pattern, the timing spine, and the low-regret call>",
+      "rubric": "COMPLETENESS: triangulates ALL FOUR systems + an explicit low-regret recommendation. ACCURACY: identifies the year's risk/opportunity profile consistent with the reference spine. QUALITY: genuinely actionable, low-regret framing; catches the specific recurring risk; no hand-waving.",
+      "_note": "This is the heavy four-system orchestration task — it makes capable agents spawn the analyst+advisor+redteamer subagent fleet. Budget generously (>=1500s) and treat a timeout as DNF, not as wrong."
+    },
+    {
+      "id": "standards-concept",
+      "kind": "judge",
+      "expectsTools": false,
+      "prompt": "Explain <a governance/standards concept defined in this repository's docs> in 3-4 sentences, as defined in this repository's material.",
+      "reference": "<the concept's actual definition from your docs/ — and the generic analogies that are NOT in your material (to catch fabrication)>",
+      "rubric": "COMPLETENESS: the concept's key components. ACCURACY: matches the repo's definition, not invented terminology. QUALITY: concise, grounded; penalize confident fabrication of analogies/citations not in the repo."
+    }
+  ]
+}

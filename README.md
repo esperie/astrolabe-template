@@ -462,6 +462,18 @@ node .claude/bin/sync.mjs ~/my-astrolabe --check    # report drift only
 
 ---
 
+## Benchmarking models (optional)
+
+Astrolabe is model-agnostic — it runs on whichever model backs your Claude Code session. If you want to
+compare backends **on this framework's own work** (four-system casting, standards Q&A, KB fidelity),
+`eval/model-bench/` is a reusable harness that drives each model multi-turn-agentic with the full COC
+artifacts loaded and scores **completeness · accuracy · interpretation-quality** (judge) plus a bias-free
+deterministic factual cross-check and calc-authority compliance. It ships with `tasks.template.json`
+(prompts only) — copy it to a private `tasks.json` and fill the answers from your own canon. See
+`eval/model-bench/README.md` for the methodology, the driving notes, and findings from a reference run
+(short version: the scaffolding equalizes factual accuracy, so models separate on interpretation quality
+and fabrication resistance; faithful four-system orchestration is expensive and high-variance).
+
 ## Privacy & honest framing
 
 Your instance holds your birth data and your most personal questions, so it is built to be **private by
