@@ -4,7 +4,7 @@
  *   Interpretive tasks (all except factOnly) => claude-opus judge on 3 dims:
  *      completeness, accuracy, quality-of-interpretation (0-5 each) -> overall 0-1.
  *   Oracle tasks ALSO get an independent deterministic FACTUAL cross-check (token match).
- *   factOnly tasks (asme-title) => deterministic only.
+ *   factOnly tasks (the title-fidelity probe) => deterministic only.
  *   DNF (timeout) => excluded (accuracy null).
  * Judge runs OUTSIDE the repo (neutral, no COC overhead). Writes OUT/scored.json.
  */

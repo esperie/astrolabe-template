@@ -19,11 +19,17 @@
       ".claude/bin/canon-amend.mjs",
       ".claude/bin/sync.mjs",
       ".claude/bin/sync-manifest.json",
-      ".claude/settings.json"
+      ".claude/settings.json",
+      "eval/model-bench/run.mjs",
+      "eval/model-bench/score.mjs",
+      "eval/model-bench/report.mjs",
+      "eval/model-bench/README.md",
+      "eval/model-bench/tasks.template.json"
     ]
   },
   "personal": [
     ".claude/canon/**",
+    "eval/model-bench/tasks.json",
     ".claude/calc/canon-consistency.test.mjs",
     ".claude/calc/eval-extra.json",
     ".claude/calc/birth.json",
