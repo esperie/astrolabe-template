@@ -67,7 +67,7 @@ whole gate (VERDICT PASS); `node .claude/calc/*.test.mjs` for individual suites.
 | `/implement` | 03 | Execute one task at a time |
 | `/redteam` · `/vet` | 04 | Adversarial stress-test / verify to convergence |
 | `/codify` | 05 | Capture knowledge for future sessions |
-| `/ws` · `/wrapup` | — | Status / save-and-close |
+| `/ws` · `/sweep` · `/wrapup` | — | Status · outstanding-work audit · save-and-close |
 
 ## Rules Index
 `calc-authority` · `canon-protection` · `destiny-advisory` · `redteam-mandatory` ·
