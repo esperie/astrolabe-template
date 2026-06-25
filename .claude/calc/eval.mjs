@@ -34,6 +34,7 @@ const DIRS = [path.join(ROOT, ".claude/calc"), path.join(ROOT, ".claude/hooks")]
 // don't pin a count (e.g. counts still stabilising). Keep counts in sync as suites grow.
 const META = {
   "astro.test.mjs":            { system: "astro (ephemeris core)", expect: 6,   oracle: "Meeus / known 节气 instants", residual: "—" },
+  "timezone.test.mjs":         { system: "tz engine (IANA/ICU)",    expect: 31,  oracle: "IANA tz database via Node ICU (zoneinfo transitions)", residual: "pre-1970 offsets approximate (zoneinfo-documented); DST gap/overlap → post-transition" },
   "public-validation.test.mjs":{ system: "public chart (Einstein)", expect: 14, oracle: "Astro-Databank AA · published BaZi · Lagna360/AstroSage · JPL", residual: "ziwei/qimen = regression locks (no public oracle); Moon ±0.3° (UT/ephemeris)" },
   "canon-consistency.test.mjs":{ system: "canon ↔ calculators",    expect: 7,   oracle: "instance canon.md §2/5/6/7/8/13", residual: "—", perPerson: true },
   "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 83,  oracle: "deny/allow vectors",          residual: "—" },

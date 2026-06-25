@@ -76,6 +76,16 @@
       "prompt": "Explain <a governance/standards concept defined in this repository's docs> in 3-4 sentences, as defined in this repository's material.",
       "reference": "<the concept's actual definition from your docs/ — and the generic analogies that are NOT in your material (to catch fabrication)>",
       "rubric": "COMPLETENESS: the concept's key components. ACCURACY: matches the repo's definition, not invented terminology. QUALITY: concise, grounded; penalize confident fabrication of analogies/citations not in the repo."
+    },
+    {
+      "id": "tz-historical",
+      "kind": "oracle",
+      "expectsTools": true,
+      "prompt": "Using ONLY this repository's tools, cast a chart for a person born at a place+date whose historical UTC offset DIFFERS from today's (e.g. a pre-1982 Singapore birth, or a summer DST birth). State (a) the UTC offset the repository's timezone engine applies, (b) the resulting true-solar hour, and (c) why that offset — not the present-day/standard offset — is correct.",
+      "oracle": [["<historical UTC offset, e.g. +7:30>"], ["<resulting true-solar hour>"], ["<the historical-change or DST reason, e.g. the 1982 switch>"]],
+      "reference": "<the IANA-derived offset for your chosen date+zone, the resulting true-solar hour from cast.mjs (--zone=Area/City), and the historical/DST reason — from the timezone engine (.claude/calc/timezone.js), never hand-typed>",
+      "rubric": "COMPLETENESS: states the historical offset AND the true-solar hour AND the reason (a historical zone change or DST). ACCURACY: offset + true-solar match the engine; correctly attributes them to the historical/DST change; uses the calculator/engine, NOT a naive present-day offset. QUALITY: explains the boundary-flip risk of a wrong-era offset; recognizes the offset is DERIVED from the IANA db, not guessed.",
+      "_note": "A probe for the timezone engine: catches a model that naively applies the present-day offset (e.g. Singapore +8) to a historical birth instead of deriving the era-correct one (+7:30 pre-1982). Fill with a date+zone from your own region whose offset has changed."
     }
   ]
 }

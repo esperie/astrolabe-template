@@ -16,6 +16,7 @@ import bazi from "./bazi.js";
 import ziwei from "./ziwei.js";
 import qimen from "./qimen.js";
 import vedic from "./vedic.js";
+import timezone from "./timezone.js";
 
 // Default chart: a per-instance .claude/calc/birth.json (PERSONAL — never synced or promoted) holds
 // the owner's birth data, written at onboarding. The bare template ships none and falls back to a
@@ -43,10 +44,25 @@ if (pos.length >= 2) {
 }
 const isCanon = JSON.stringify(inp) === JSON.stringify(CANON_CHART);
 
+// Authoritative timezone: when a zone is known (birth.json "zone" or --zone=Area/City), DERIVE the
+// exact UTC offset (historical transitions + DST) from the IANA db rather than trusting a hand-typed
+// tz. reconcile() returns the offset to use; a wrong supplied tz is corrected and flagged. This MUST
+// run before the chart is computed so the corrected offset feeds the true-solar conversion.
+const zoneArg = [...flags].map((f) => /^--zone=(.+)$/.exec(f)).find(Boolean);
+const zone = zoneArg ? zoneArg[1] : inp.zone;
+const rec = timezone.reconcile({ zone, tz: inp.tz, y: inp.y, m: inp.m, d: inp.d, hour: inp.hour, minute: inp.minute, longitude: inp.longitude });
+if (rec.tz != null && Number.isFinite(rec.tz)) inp.tz = rec.tz;
+
 const b = bazi.computeChart(inp);
 const P = b.pillars;
-console.log(`\n════ ${isCanon ? CANON_LABEL : "CHART"} — ${inp.y}-${String(inp.m).padStart(2, "0")}-${String(inp.d).padStart(2, "0")} ${String(inp.hour).padStart(2, "0")}:${String(inp.minute).padStart(2, "0")} tz${inp.tz} lon${inp.longitude} ${inp.gender} ════`);
+console.log(`\n════ ${isCanon ? CANON_LABEL : "CHART"} — ${inp.y}-${String(inp.m).padStart(2, "0")}-${String(inp.d).padStart(2, "0")} ${String(inp.hour).padStart(2, "0")}:${String(inp.minute).padStart(2, "0")} tz${inp.tz}${rec.source === "zone" ? `(${zone})` : ""} lon${inp.longitude} ${inp.gender} ════`);
 console.log(`true-solar hour ≈ ${b.trueSolarHours.toFixed(2)}`);
+// tz warnings: a corrected/disagreeing offset ('warn') always surfaces; advisory notes ('info' —
+// no-zone, DST-ambiguous, pre-1970) only for ad-hoc charts, not the clean canon default.
+for (const w of rec.warnings) {
+  if (w.sev === "warn") console.warn(`  ⚠ tz: ${w.msg}`);
+  else if (!isCanon) console.warn(`  · tz: ${w.msg}`);
+}
 
 console.log(`\n── 八字 (true-solar) ──`);
 console.log(`  时    日    月    年`);
