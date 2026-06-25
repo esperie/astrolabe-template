@@ -32,7 +32,11 @@ const backendKey = arg("backend");
 const timeoutS = parseInt(arg("timeout", "420"), 10);
 const onlyTasks = (arg("tasks", "") || "").split(",").filter(Boolean);
 if (!backendKey || !BACKENDS[backendKey]) { console.error("need --backend " + Object.keys(BACKENDS).join("|")); process.exit(2); }
-const be = BACKENDS[backendKey];
+// --slot N overrides the backend's default csq slot (its account binding may be weekly-capped;
+// point it at a live one — `csq status`). Only meaningful for csq-driven backends (claude/codex);
+// the ollama backend drives the claude binary directly via env and ignores the slot.
+const slotOverride = arg("slot");
+const be = { ...BACKENDS[backendKey], slot: slotOverride ? parseInt(slotOverride, 10) : BACKENDS[backendKey].slot };
 
 const tasks = JSON.parse(fs.readFileSync(path.join(__dirname, (process.env.BENCH_TASKS || "tasks.template.json")), "utf8")).tasks
   .filter(t => !onlyTasks.length || onlyTasks.includes(t.id));
