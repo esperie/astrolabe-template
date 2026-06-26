@@ -32,11 +32,15 @@ const fromArg =
   (argv.includes("--from") ? argv[argv.indexOf("--from") + 1] : "") ||
   "esperie";
 
-// Instances = sibling dirs of the template that have a .claude/ (excluding the template itself).
+// Instances = sibling dirs of the template that are a real per-person Astrolabe INSTANCE — i.e.
+// carry a .claude/calc/birth.json (the instance marker). A bare .claude/ is NOT enough: sibling
+// PRODUCT repos (e.g. astrolabe/app) vendor a calculator snapshot and have their OWN COC under
+// .claude/ but no birth.json, so they must NOT receive the advisory-framework fan-out (it would
+// overwrite their commands/rules/agents). The template itself is excluded explicitly.
 const ALL = fs.readdirSync(PARENT, { withFileTypes: true })
   .filter((e) => e.isDirectory())
   .map((e) => path.join(PARENT, e.name))
-  .filter((p) => p !== TEMPLATE && fs.existsSync(path.join(p, ".claude")))
+  .filter((p) => p !== TEMPLATE && fs.existsSync(path.join(p, ".claude", "calc", "birth.json")))
   .sort();
 
 const FROM = path.join(PARENT, fromArg);

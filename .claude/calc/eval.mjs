@@ -37,7 +37,7 @@ const META = {
   "timezone.test.mjs":         { system: "tz engine (IANA/ICU)",    expect: 31,  oracle: "IANA tz database via Node ICU (zoneinfo transitions)", residual: "pre-1970 offsets approximate (zoneinfo-documented); DST gap/overlap → post-transition" },
   "public-validation.test.mjs":{ system: "public chart (Einstein)", expect: 14, oracle: "Astro-Databank AA · published BaZi · Lagna360/AstroSage · JPL", residual: "ziwei/qimen = regression locks (no public oracle); Moon ±0.3° (UT/ephemeris)" },
   "canon-consistency.test.mjs":{ system: "canon ↔ calculators",    expect: 7,   oracle: "instance canon.md §2/5/6/7/8/13", residual: "—", perPerson: true },
-  "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 83,  oracle: "deny/allow vectors",          residual: "—" },
+  "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 204, oracle: "deny/allow vectors",          residual: "interpreter runtime-path construction + env-set $VAR + external patch files — static-undecidable, FS-immutable defence" },
   "vet-gate.test.mjs":         { system: "vet-gate hook",           expect: 9,   oracle: "Stop-gate scenarios",         residual: "—" },
 };
 
