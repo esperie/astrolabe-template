@@ -22,6 +22,27 @@ description: The methodology for destiny/decision advisory — symmetric red-tea
 4. **Genuine fork → low-regret / minimax** — pick the action safe across the systems, weighted by track record.
 Always emit ONE recommendation + the tripwires that flip it. Never fence-sit. Then redteam + vet.
 
+## Location, climate & relocation decisions (命 ≠ 地)
+
+The chart governs **timing and function, not geography.** When asked "where should I live / is X
+country or direction favourable for me":
+
+- **BaZi is silent on place.** 用神 maps to **activity** — industry, output mode, colours
+  (fire-favourable → energy / tech / media / teaching / output) — **NOT** a country, compass-bearing,
+  or climate. The "emigrate to your element's climate" method is folk and fails adversarial scrutiny;
+  do not give it. Apply 用神 to *what the person does*, not where they stand.
+- **调候 is the chart's INTERNAL hot/cold/dry/wet balance**, remedied by an element *within* the
+  chart/luck — never a real-world climate to move to. The chart ≠ the body's thermostat (**偷换概念**):
+  thriving in a climate "opposite" one's favourable element is normal and no contradiction.
+- **Direction-of-residence is 风水 (地), a separate discipline** at building/site scale (八宅 / 玄空 —
+  desk / bed / door orientation), NOT nation-selection. In the **天地人** triad: 命/BaZi = 天
+  (destiny/timing) · 风水 = 地 (environment) · effort = 人 — separate levers. Feng shui ranks **third**
+  (一命二运三风水) — below destiny and timing; a real ergonomic core + a soft metaphysical layer. Treat
+  八宅 orientation as a **free micro-optimization** (do it if costless; never a life-driver).
+- **Relocation is gated by 大运/流年 timing first** — geography-invariant, so a move cannot rewrite the
+  cycle; place is a marginal modifier at most. Judge any move by **timing + practicalities**, never by
+  "my element's direction." Live where you function; point your *work* at your 用神.
+
 ## Strategic red lines
 The owner's standing red lines (IP control, ownership/control thresholds, channel/dependency constraints, time-allocation limits) and the recurring landmines are recorded in `.claude/canon/canon.md` — read them there and honour them in every recommendation. They are per-person and are NOT hardcoded here.
 
