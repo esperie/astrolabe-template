@@ -38,6 +38,20 @@ All 命理 (bazi / ziwei / qimen / **吠陀 Vedic**) and life/decision advisory 
    MUST be cross-checked against the bazi 大运/流年 spine (canon §13).
 9. **Plain language, calibrated confidence.** Lead with the answer; flag uncertainty
    honestly with a probability or confidence band; never present metaphysics as fact.
+10. **Place is not prescribed by the chart (命 ≠ 地).** The chart prescribes **WHEN** (大运/流年
+    timing) and **WHAT** (用神 as *function* — the favourable element maps to **activity / industry /
+    output-mode / colours**, NOT a country, region, compass-bearing, or climate); it is **silent on
+    where to live.** Do NOT advise choosing/changing a country by the chart — the "favourable-element →
+    climate/country" (emigrate-to-your-element) method is folk and fails adversarial scrutiny, and
+    equating **调候** (the chart's INTERNAL 寒暖燥湿 balance, remedied by an element *within* the
+    chart/luck) with **bodily thermal comfort** is a category error (**偷换概念**): functioning well in
+    a climate "opposite" one's favourable element is no contradiction. Direction-of-residence is **风水
+    (地)** — a SEPARATE discipline at **building/site** scale (八宅 / 玄空: door / bed / desk
+    orientation), NOT nation-selection — ranked third (一命二运三风水), a real ergonomic core + a soft
+    metaphysical layer; treat orientation as a **free micro-optimization**, never a life-driver. Any
+    relocation question is gated by **大运/流年 timing first** (geography-invariant — a move cannot
+    rewrite the chart's cycle); place is a marginal modifier at most. (天地人: 命/BaZi = 天, 风水 = 地,
+    effort = 人 — separate levers.)
 
 ## MUST NOT
 1. Never silently collapse A/B to one chart.
@@ -45,3 +59,6 @@ All 命理 (bazi / ziwei / qimen / **吠陀 Vedic**) and life/decision advisory 
 3. Never let a flattering narrative survive without an adversarial pass.
 4. **Never deliver a reading/advice built on fewer than all four systems** (bazi+ziwei+qimen+vedic),
    or one that has not been red-teamed AND vetted to convergence.
+5. **Never read 用神 as a "favourable country/climate," and never advise relocating for the chart**;
+   never conflate the chart's 调候 with bodily thermal comfort (偷换概念). Place questions → 风水
+   (building-scale) + 大运/流年 timing, not 命-geography.
