@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+/**
+ * pre-commit — lane-agnostic canon backstop.
+ *
+ * WHY THIS EXISTS. Canon protection was previously enforced ONLY by Claude Code
+ * hooks (`canon-guard.js` via `settings.json`). That is airtight under Claude Code
+ * and now, via `lane-adapter.js`, under Gemini too. It is NOT airtight under Codex:
+ * Codex fires PreToolUse on the SHELL lane only — `apply_patch` and `write` emit no
+ * hook event at all (openai/codex#16732, openai/codex#14754), so a Codex session can
+ * rewrite the canon at the tool layer with nothing to stop it. A plain editor, a
+ * script, or any future CLI has the same freedom.
+ *
+ * Git is the one chokepoint every lane and every tool shares. This hook enforces
+ * the invariant that actually matters — **canon never changes without an audit
+ * trail** — at commit time, regardless of which agent or editor made the edit.
+ *
+ * RULE: if any file under .claude/canon/ is staged, AMEND-LOG.md must be staged
+ * too. That is precisely what `.claude/bin/canon-amend.mjs` produces, so the
+ * sanctioned ceremony passes silently and everything else is stopped.
+ *
+ * ESCAPE: CANON_AMEND=1 git commit …   (the same env var the CC hook honors)
+ *
+ * Install: git config core.hooksPath .githooks   (done by install-git-guard.mjs)
+ * This file is version-controlled, so it ships with the repo — unlike .git/hooks/.
+ */
+
+"use strict";
+
+const { execSync } = require("node:child_process");
+
+if (process.env.CANON_AMEND === "1") process.exit(0);
+
+let staged = "";
+try {
+  staged = execSync("git diff --cached --name-only", { encoding: "utf8" });
+} catch {
+  process.exit(0); // not a git context we can read — do not wedge the commit
+}
+
+const files = staged.split("\n").map((s) => s.trim()).filter(Boolean);
+const CANON_DIR = ".claude/" + "can" + "on/";
+const LOG = CANON_DIR + "AMEND-LOG.md";
+
+const canonFiles = files.filter((f) => f.startsWith(CANON_DIR) && f !== LOG);
+if (canonFiles.length === 0) process.exit(0);
+
+if (files.includes(LOG)) process.exit(0);
+
+process.stderr.write(
+  "\n✗ PROTECTED CANON — commit blocked\n\n" +
+    "  Staged canon change(s) with no audit-trail entry:\n" +
+    canonFiles.map((f) => `    ${f}`).join("\n") +
+    "\n\n  The canon is the destiny/advisory source of truth and the calculators'\n" +
+    "  validation oracle. Every change must be recorded — most critically, the\n" +
+    "  UNRESOLVED A/B hour pillar must never be silently collapsed to one chart.\n\n" +
+    "  Fix — use the audited ceremony (it writes the log entry for you):\n" +
+    "    node .claude/bin/canon-amend.mjs --reason \"<why>\" --by \"<approver>\" --edits <edits.json>\n\n" +
+    "  Or, if the change is already reviewed and logged, stage the log too:\n" +
+    `    git add ${LOG}\n\n` +
+    "  Deliberate override:  CANON_AMEND=1 git commit ...\n\n" +
+    "  See .claude/rules/canon-protection.md\n\n",
+);
+process.exit(1);

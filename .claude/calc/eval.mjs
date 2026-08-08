@@ -39,6 +39,8 @@ const META = {
   "canon-consistency.test.mjs":{ system: "canon ↔ calculators",    expect: 7,   oracle: "instance canon.md §2/5/6/7/8/13", residual: "—", perPerson: true },
   "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 204, oracle: "deny/allow vectors",          residual: "interpreter runtime-path construction + env-set $VAR + external patch files — static-undecidable, FS-immutable defence" },
   "vet-gate.test.mjs":         { system: "vet-gate hook",           expect: 9,   oracle: "Stop-gate scenarios",         residual: "—" },
+  "lane.test.mjs":             { system: "cross-CLI lane contract", expect: 34,  oracle: "lane-native hook payloads (codex/gemini) through a real subprocess", residual: "Codex 0.147 invokes NO hooks (measured, repo-local + CODEX_HOME); Gemini lane unverified live (account tier) — see rules/multi-cli.md" },
+  "git-guard.test.mjs":        { system: "canon commit-guard (git)", expect: 6,  oracle: "real git commits in a throwaway repo", residual: "commit-time, not write-time" },
 };
 
 // Optional per-instance suite registrations — private oracle suites an instance adds beyond the

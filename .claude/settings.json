@@ -1,11 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "description": "Astrolabe instance — personal KB + four-system destiny advisory. Destiny canon (.claude/canon/) is hook-protected: canon-guard.js (PreToolUse Edit/Write/NotebookEdit + Bash) + permissions.deny block silent mutation; inject-canon.js (UserPromptSubmit) injects the protected guardrails every turn. Amend canon only via the rules/canon-protection.md ceremony (CANON_AMEND=1).",
+  "description": "Astrolabe instance — personal KB + four-system destiny advisory. Destiny canon (.claude/canon/) is hook-protected: canon-guard.js (PreToolUse Edit/Write/NotebookEdit + Bash) + permissions.deny (Edit(.claude/canon/**) — the file-permission rule that covers ALL file-editing tools, incl. Write/NotebookEdit) block silent mutation; inject-canon.js (UserPromptSubmit) injects the protected guardrails every turn. Amend canon only via the rules/canon-protection.md ceremony (CANON_AMEND=1).",
   "permissions": {
     "deny": [
-      "Edit(.claude/canon/**)",
-      "Write(.claude/canon/**)",
-      "NotebookEdit(.claude/canon/**)"
+      "Edit(.claude/canon/**)"
     ]
   },
   "hooks": {

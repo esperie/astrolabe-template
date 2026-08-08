@@ -1,0 +1,49 @@
+{
+  "_note": "NOT HONORED by Codex v0.147.0 (measured 2026-08-08 — probe hook never invoked, repo-local AND user-global). Emitted for forward-compatibility. Real enforcement on this lane: AGENTS.md (soft) + .githooks/pre-commit (hard). See rules/multi-cli.md.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./.claude/hooks/lib/lane-adapter.js --lane=codex ./.claude/hooks/inject-canon.js"
+          },
+          {
+            "type": "command",
+            "command": "node ./.claude/hooks/lib/lane-adapter.js --lane=codex ./.claude/hooks/calc-reminder.js"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "apply_patch|write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./.claude/hooks/lib/lane-adapter.js --lane=codex ./.claude/hooks/canon-guard.js"
+          }
+        ]
+      },
+      {
+        "matcher": "shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./.claude/hooks/lib/lane-adapter.js --lane=codex ./.claude/hooks/canon-guard.js"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./.claude/hooks/lib/lane-adapter.js --lane=codex ./.claude/hooks/vet-gate.js"
+          }
+        ]
+      }
+    ]
+  }
+}
