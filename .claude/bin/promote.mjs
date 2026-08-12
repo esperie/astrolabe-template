@@ -205,6 +205,26 @@ if (promoted.length) {
   const header = fs.existsSync(logPath) ? "" : "# Promote Log\n\nAppend-only record of framework changes promoted UP from instances into the template.\n\n";
   fs.appendFileSync(logPath, header + logLine);
 }
+// Re-emit the TEMPLATE's own CLI lanes before re-validating — the mirror of the same step in
+// sync.mjs. A promote mutates the template's .claude/ source (rules, commands, skills), and
+// AGENTS.md / GEMINI.md / .codex/** / .gemini/** are DERIVED from it (rules/multi-cli.md §1).
+// Without this, promoting any command or skill leaves the template's lane-contract suite in DRIFT
+// and the promote reports FAIL for a reason unrelated to what was promoted.
+// Unconditional (not gated on `promoted.length`): if a PREVIOUS promote left the lanes drifted, a
+// later no-op promote must still heal them rather than reporting FAIL forever. Idempotent, and this
+// point is only reached on a real apply — --dry-run and --check have already exited.
+{
+  const emitter = path.join(TEMPLATE, ".claude/bin/emit-cli-artifacts.mjs");
+  if (fs.existsSync(emitter)) {
+    console.log(`\n  re-emitting template CLI lanes …`);
+    try {
+      const out = execFileSync("node", [emitter], { encoding: "utf8", cwd: TEMPLATE });
+      console.log("  " + out.trim().split("\n").pop());
+    } catch (e) {
+      console.log("  ⚠ lane emit failed: " + ((e.stdout || "") + (e.stderr || "")).trim().split("\n").pop());
+    }
+  }
+}
 console.log(`\n  re-validating template …`);
 try {
   const out = execFileSync("node", [path.join(TEMPLATE, ".claude/calc/eval.mjs"), "--quiet"], { encoding: "utf8" });

@@ -29,7 +29,29 @@ description: "The Astrolabe report design system — the canonical section index
 
 ---
 
-## 1. The canonical index — what every reading must cover
+## 1. Two report types — decide this FIRST
+
+**A reading is either about ONE person or about a RELATIONSHIP between two, and they are different
+documents.** Choosing wrongly produces a report that answers a question nobody asked.
+
+| | **INDIVIDUAL** (the default) | **PARTNERSHIP / SYNASTRY** |
+|---|---|---|
+| Subject | The owner's own chart — a life question, a 流年, a domain | The owner **and** a named counterparty |
+| Question shape | "How do I work / what should I do / when?" | "Should I do this **with them**, and in what structure?" |
+| Charts shown | One | Two, side by side |
+| Distinctive sections | Life domains; the 用神 mechanism; the timing spine | Cross-chart mechanics; the structure/ownership call; **the symmetric reverse** |
+| Palette | Derived from the owner (§2) | **Also derived from the OWNER** — they are the reader, not the subject |
+
+**Default to INDIVIDUAL.** Most requests are the owner asking about themselves. Only go to partnership
+when a second named person is genuinely the subject — and say which you chose before rendering.
+
+**Two rules specific to the partnership type, because both were learned the hard way:**
+- **The symmetric reverse is mandatory.** State what the owner *costs* the other party, not just what
+  the other party offers. A synastry that only reads one direction is a sales document.
+- **Never bundle two decisions.** "Work with them" and "own something with them" are separate calls
+  with separate confidences, and the bundling is usually where the risk actually lives.
+
+## 1a. The canonical index — what every reading must cover
 
 Sections are ordered by **what the reader needs first**, not by how the analysis was produced. A reader
 in a hurry must be able to stop after §1 and still act correctly.
@@ -43,6 +65,8 @@ in a hurry must be able to stop after §1 and still act correctly.
 | **4** | **The reader's own chart facts** | Pillars/placements actually used, with the calculator command that reproduces them. | **Always** |
 | **5** | **Timing** | Phases with dates and hinges — not a list of years. Say what changes at each boundary. | When the question has a clock |
 | **6** | **Structure / mechanism** | How the thing actually works: the chain, the drain, the bridge. Plain-language mechanism, not vocabulary. | When advising on structure |
+| **6i** | *Individual only* — **Life domains** | Only the domains actually asked about. Career / money / relationships / health / mind. Never a full sweep by default. | Individual |
+| **6p** | *Partnership only* — **Cross-chart + the symmetric reverse** | What passes between the two charts, in both directions, including what the owner costs the other party. | Partnership |
 | **7** | **Forks & branches** | Every unresolved ambiguity (hour forks, competing structures), carried, never collapsed. | When any fork exists |
 | **8** | **Tests worth running** | Dated, cheap, opposite-signed. Each with its falsifier. | **Always** |
 | **9** | **What would most change this** | Ranked. State whether each would change the *reasoning* or the *call*. | **Always** |

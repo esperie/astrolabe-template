@@ -10,6 +10,6 @@ Chart cast (deterministic calculators, never hand-computed):
 **Run this first** (deterministic — do not answer from memory):
 
 ```bash
-node "./.claude/calc/cast.mjs" $ARGUMENTS
+node "${CLAUDE_PROJECT_DIR:-.}/.claude/calc/cast.mjs" $ARGUMENTS
 ```
 Now read `.claude/canon/canon.md` and give a brief, plain-language interpretation anchored on the owner's **用神/喜忌** and timing spine (both recorded in the canon). Cite values from the cast above — do not recompute. The canon's **working-default hour** is the default; mention the hedge-hour alternative only where the hour pillar is material and consequential to the question.

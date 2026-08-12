@@ -136,7 +136,10 @@ if (changes) {
 // command or skill lands, the lane-contract suite reports DRIFT, and every such sync ends red for a
 // reason that has nothing to do with the sync's correctness. The emitted trees are classified
 // PERSONAL (each instance inlines its own CLAUDE.md), so they are REGENERATED here, never copied.
-if (changes) {
+// Unconditional (not gated on `changes`): the instance's lanes can be stale from LOCAL edits to its
+// own .claude/ source, not just from this sync. Gating on `changes` means a no-op sync reports FAIL
+// and never heals it. Idempotent, and only reached on a real apply (--dry-run/--check exited above).
+{
   const emitter = path.join(INSTANCE, ".claude/bin/emit-cli-artifacts.mjs");
   if (fs.existsSync(emitter)) {
     console.log(`\n  re-emitting CLI lanes …`);

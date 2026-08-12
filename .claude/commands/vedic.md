@@ -5,7 +5,7 @@ argument-hint: "[YYYY-MM-DD HH:MM tz lon gender] [--both]"
 
 Full chart (the 吠陀 Vedic block is near the end):
 
-!`node "$CLAUDE_PROJECT_DIR/.claude/calc/cast.mjs" $ARGUMENTS`
+!`node "${CLAUDE_PROJECT_DIR:-.}/.claude/calc/cast.mjs" $ARGUMENTS`
 
 Give a plain-language Vedic reading anchored on the cast above (cite values, never recompute):
 
