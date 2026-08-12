@@ -130,6 +130,24 @@ if (changes) {
   const header = fs.existsSync(logPath) ? "" : "# Sync Log\n\nAppend-only record of framework rollouts from the Astrolabe template.\n\n";
   fs.appendFileSync(logPath, header + logLine);
 }
+// Re-emit the instance's CLI lanes BEFORE re-validating. A sync mutates .claude/ source — rules,
+// commands, skills — and AGENTS.md / GEMINI.md / .codex/** / .gemini/** are DERIVED from exactly
+// that source (rules/multi-cli.md §1). Without this the lanes go stale the instant any framework
+// command or skill lands, the lane-contract suite reports DRIFT, and every such sync ends red for a
+// reason that has nothing to do with the sync's correctness. The emitted trees are classified
+// PERSONAL (each instance inlines its own CLAUDE.md), so they are REGENERATED here, never copied.
+if (changes) {
+  const emitter = path.join(INSTANCE, ".claude/bin/emit-cli-artifacts.mjs");
+  if (fs.existsSync(emitter)) {
+    console.log(`\n  re-emitting CLI lanes …`);
+    try {
+      const out = execFileSync("node", [emitter], { encoding: "utf8", cwd: INSTANCE });
+      console.log("  " + out.trim().split("\n").pop());
+    } catch (e) {
+      console.log("  ⚠ lane emit failed: " + ((e.stdout || "") + (e.stderr || "")).trim().split("\n").pop());
+    }
+  }
+}
 console.log(`\n  re-validating instance …`);
 try {
   const out = execFileSync("node", [path.join(INSTANCE, ".claude/calc/eval.mjs"), "--quiet"], { encoding: "utf8" });

@@ -12,3 +12,5 @@ Append-only record of framework changes promoted UP from instances into the temp
 - promote 2026-08-08T11:01:25.522Z — 2 file(s) from esperie: .claude/calc/eval.mjs, .claude/hooks/lane.test.mjs
 - promote 2026-08-12T09:21:00.002Z — 7 file(s) from esperie: .claude/calc/bazi.js, .claude/calc/cast.mjs, .claude/calc/eval.mjs, .claude/calc/public-validation.test.mjs, .claude/calc/qimen.js, .claude/calc/vedic.js, .claude/bin/sync-manifest.json
 - promote 2026-08-12T09:21:25.420Z — 7 file(s) from esperie: .claude/skills/06-report-design/SKILL.md, .claude/skills/06-report-design/references/language.md, .claude/skills/06-report-design/references/palette.md, .claude/skills/06-report-design/references/report-template.md, .claude/skills/06-report-design/references/report.css, .claude/skills/06-report-design/references/showcase.html, .claude/bin/render-reading.mjs
+- promote 2026-08-12T10:14:21.724Z — 1 file(s) from esperie: .claude/bin/sync.mjs
+- promote 2026-08-12T10:16:48.593Z — 1 file(s) from esperie: .claude/bin/sync.mjs
