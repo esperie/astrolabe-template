@@ -792,6 +792,97 @@ function charaKarakas(grahaList) {
   return out;
 }
 
+/* ═══════════════════ Pakṣa bala / tithi / lunar phase (Kāla bala) ═════════════════ */
+
+const TITHI_NAMES = [
+  "Pratipada", "Dvitiya", "Tritiya", "Chaturthi", "Panchami", "Shashthi", "Saptami",
+  "Ashtami", "Navami", "Dashami", "Ekadashi", "Dvadashi", "Trayodashi", "Chaturdashi",
+];
+const AU_KM = 149597870.7;
+
+/**
+ * Pakṣa bala — the lunar-phase component of Kāla bala (BPHS).
+ *
+ * METHOD (BPHS): elongation ψ = Moon − Sun. If ψ > 180°, reduce it to 360° − ψ (the
+ * shorter arc, 0–180°: distance from the new Moon). Divide by 3 → 0–60 virūpas.
+ *   BENEFIC branch  = reducedArc / 3
+ *   MALEFIC branch  = 60 − reducedArc / 3
+ * Longitudes enter only as a DIFFERENCE, so the result is ayanāṃśa-invariant (sidereal
+ * and tropical inputs give the same answer).
+ *
+ * BOTH BRANCHES ARE RETURNED, DELIBERATELY UNRESOLVED. Which branch applies to the MOON
+ * is a convention choice that flips the conclusion (e.g. 44.59 vs 15.41 on the same
+ * chart), and the two classical rules disagree:
+ *   - `byPaksa`       — the Moon is a benefic in śukla pakṣa, a malefic in kṛṣṇa pakṣa.
+ *   - `byIllumination`— the Moon is a benefic while more than half lit (from the 8th
+ *                       tithi of śukla to the 8th of kṛṣṇa), a malefic otherwise.
+ * For the other grahas the classification is not in dispute: Jupiter/Venus (and
+ * unafflicted Mercury) take the benefic branch; Sun/Mars/Saturn take the malefic branch.
+ * `moonDoubled` is the further BPHS variant in which the Moon's pakṣa bala is doubled —
+ * reported, never applied.
+ *
+ * `illuminatedFraction` uses the Meeus ch.48 phase angle from the real Sun–Earth and
+ * Earth–Moon distances (eq.48.3), not the 180°−ψ approximation (which differs by <0.1pp).
+ *
+ * @param {number} sunLon   Sun longitude (deg) — tropical OR sidereal
+ * @param {number} moonLon  Moon longitude (deg) — same frame as sunLon
+ * @param {number} [jdeTT]  TT Julian Day; required only for the distance-corrected
+ *   illuminated fraction. Omit → `illuminatedFraction` falls back to (1−cos ψ)/2 and
+ *   `illuminationMethod` says so.
+ * @returns {{elongation, reducedArc, paksa, tithi, illuminatedFraction, illuminationMethod,
+ *   benefic:{virupas,rupas}, malefic:{virupas,rupas}, moonBranch:{byPaksa,byIllumination},
+ *   moonDoubled:{benefic,malefic}, convention}}
+ */
+function paksaBala(sunLon, moonLon, jdeTT) {
+  const elongation = mod360(moonLon - sunLon);
+  const reducedArc = elongation > 180 ? 360 - elongation : elongation;
+  const paksa = elongation < 180 ? "shukla" : "krishna"; // waxing / waning
+
+  // Tithi 1..30 (12° each). 1–15 śukla (15 = Purnima), 16–30 kṛṣṇa (30 = Amavasya).
+  const tithiIndex = Math.floor(elongation / 12) + 1;
+  const inPaksa = tithiIndex <= 15 ? tithiIndex : tithiIndex - 15;
+  const tithiName =
+    tithiIndex === 15 ? "Purnima" : tithiIndex === 30 ? "Amavasya" : TITHI_NAMES[inPaksa - 1];
+
+  // Illuminated fraction. Meeus 48.3: tan i = R·sin ψ / (Δ − R·cos ψ); k = (1 + cos i)/2.
+  let illuminatedFraction, illuminationMethod;
+  if (jdeTT == null) {
+    illuminatedFraction = (1 - Math.cos(elongation * D2R)) / 2;
+    illuminationMethod = "(1 − cos ψ)/2 — elongation only (no jdeTT supplied)";
+  } else {
+    const R = vsop87("earth", jdeTT).R * AU_KM; // Sun–Earth distance, km
+    const delta = moonDistance(jdeTT); // Earth–Moon distance, km
+    const psi = elongation * D2R;
+    const i = Math.atan2(R * Math.sin(psi), delta - R * Math.cos(psi));
+    illuminatedFraction = (1 + Math.cos(i)) / 2;
+    illuminationMethod = "Meeus ch.48 eq.48.3 phase angle (distance-corrected)";
+  }
+
+  const beneficV = reducedArc / 3;
+  const maleficV = 60 - beneficV;
+  const branchOf = (v) => ({ virupas: v, rupas: v / 60 });
+  return {
+    elongation,
+    reducedArc,
+    paksa,
+    tithi: { index: tithiIndex, name: tithiName, paksa, numberInPaksa: inPaksa },
+    illuminatedFraction,
+    illuminationMethod,
+    benefic: branchOf(beneficV),
+    malefic: branchOf(maleficV),
+    moonBranch: {
+      byPaksa: paksa === "shukla" ? "benefic" : "malefic",
+      byIllumination: illuminatedFraction > 0.5 ? "benefic" : "malefic",
+    },
+    moonDoubled: { benefic: 2 * beneficV, malefic: 2 * maleficV },
+    convention: {
+      source: "BPHS — reduced Sun–Moon arc ÷ 3 (benefic); 60 − that (malefic)",
+      unresolved: "which branch applies to the MOON — see moonBranch (byPaksa vs byIllumination)",
+      ayanamsaInvariant: true,
+    },
+  };
+}
+
 /* ═══════════════════════════════ LAYER 3 — Vimshottari ════════════════════════════ */
 
 const VIMS_YEAR_DAYS = 365.2425; // days per dasha-year (civil/Gregorian year used by JHora)
@@ -1002,8 +1093,11 @@ function compute(o, opts = {}) {
 
   const karakas = charaKarakas(karakaInput);
   const dasha = vimshottari(grahas.Moon.sidereal, jdUT, 3);
+  // Pakṣa bala / tithi / phase. Both convention branches are returned unresolved — see
+  // paksaBala()'s header: which branch the Moon takes is the load-bearing choice.
+  const paksa = paksaBala(grahas.Sun.sidereal, grahas.Moon.sidereal, jde);
 
-  return { input: o, jdUT, jdeTT: jde, ayanamsa: ayan, grahas, lagna, bhavas, karakas, dasha };
+  return { input: o, jdUT, jdeTT: jde, ayanamsa: ayan, grahas, lagna, bhavas, karakas, dasha, paksaBala: paksa };
 }
 
 module.exports = {
@@ -1029,6 +1123,7 @@ module.exports = {
   navamsaOf,
   vargaOf,
   charaKarakas,
+  paksaBala,
   RASIS,
   NAKSHATRAS,
   NAK_LORDS,

@@ -4,11 +4,15 @@
  * Validated against external professional oracles (see public-validation.test.mjs).
  *
  * Covers: four pillars (true-solar hour), 藏干, 十神, 纳音, 大运 (direction + start age +
- * sequence), 胎元, symbolic stars (天乙贵人 / 文昌 / 桃花 / 驿马 / 孤辰), 本命卦 / 八宅, and
- * monthly pillars for any solar year.
+ * sequence), 胎元, symbolic stars (天乙贵人 / 文昌 / 桃花 / 驿马 / 孤辰), 本命卦 / 八宅,
+ * monthly pillars for any solar year, the 干支 RELATION tables (冲/合/害/刑/三合/三会/伏吟/
+ * 反吟, single-chart and cross-chart), and weighted 藏干 element tallies.
  *
  * VALIDATION STATUS: oracle-validated = pillars, 大运, 胎元, 纳音, 贵人, 文昌, 桃花, 驿马, 卦,
  * monthly pillars + 节 dates, 命宫 (validated on reference charts). PENDING (flagged in output) = 孤辰.
+ * `relations()` / `elementWeights()` are DOCTRINE tables, not ephemeris: they are validated by
+ * the explicit doctrine tests in bazi.test.mjs (notably the 三刑 three-member rule), not by an
+ * external oracle.
  */
 const A = require("./astro");
 
@@ -138,6 +142,237 @@ function guChen(branch) {
   return "亥"; // 申酉戌
 }
 
+/* ═══════════════════ 藏干 weighting (element strength tallies) ═══════════════════ */
+
+const ELEM_NAMES = ["木", "火", "土", "金", "水"];
+const elemOfStem = (s) => ELEM_NAMES[STEM_ELEM[idxOfStem(s)]];
+
+// CONVENTION (documented, configurable): the classical 本气/中气/余气 split of each 藏干,
+// weighted 本气 1.0 · 中气 0.5 · 余气 0.3 — HIDDEN[branch] is already ordered 本气→余气.
+// (So 丑 contributes 己 1.0 土 · 癸 0.5 水 · 辛 0.3 金.) This is the weighting the 身强/身弱
+// strength reads use. It counts BRANCH-hidden stems only; the four VISIBLE stems are
+// tallied separately in `stems` (never silently mixed in), because a 藏干 tally and a 天干
+// tally answer different questions and summing them is a convention choice the caller must
+// make explicitly.
+const HIDDEN_WEIGHTS = [1.0, 0.5, 0.3];
+
+/**
+ * Weighted element tallies for a chart's pillars.
+ * @param {object|Array} input  a chart, a chart.pillars object, or an array of pillars
+ *   (GZ strings like "己未", or {gz}/{stem,branch} objects — see normalizePillars).
+ * @param {object} [opts] {hiddenWeights:[本气,中气,余气]=[1,0.5,0.3], stemWeight:1.0}
+ * @returns {{convention, hidden, stems, total, detail}}
+ *   hidden = 藏干-weighted tally {木,火,土,金,水}; stems = visible-天干 tally;
+ *   total  = hidden + stems (offered, never assumed); detail = per-contribution rows.
+ */
+function elementWeights(input, opts = {}) {
+  const w = opts.hiddenWeights || HIDDEN_WEIGHTS;
+  const sw = opts.stemWeight == null ? 1.0 : opts.stemWeight;
+  const zero = () => ({ 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 });
+  const hidden = zero(), stems = zero(), total = zero();
+  const detail = [];
+  for (const p of normalizePillars(input, null)) {
+    const se = elemOfStem(p.stem);
+    stems[se] += sw;
+    total[se] += sw;
+    detail.push({ pillar: p.label, source: "天干", stem: p.stem, element: se, weight: sw, qi: "天干" });
+    const hs = HIDDEN[p.branch];
+    hs.forEach((s, i) => {
+      const weight = w[i] == null ? 0 : w[i];
+      const e = elemOfStem(s);
+      hidden[e] += weight;
+      total[e] += weight;
+      detail.push({
+        pillar: p.label, source: "藏干", branch: p.branch, stem: s, element: e, weight,
+        qi: ["本气", "中气", "余气"][i] || `余气+${i}`,
+      });
+    });
+  }
+  const round = (o) => { for (const k of ELEM_NAMES) o[k] = Math.round(o[k] * 1e6) / 1e6; return o; };
+  return {
+    convention: { hiddenWeights: w.slice(0, 3), stemWeight: sw, basis: "本气/中气/余气; 藏干 and 天干 tallied separately" },
+    hidden: round(hidden), stems: round(stems), total: round(total), detail,
+  };
+}
+
+/* ══════════ Relation tables — 冲/合/害/刑/三合/三会/伏吟/反吟 (tested layer) ══════════ */
+// These exist so no reading ever hand-rolls them again. Every table is explicit; the
+// 三刑 / 三合 / 三会 frames report COMPLETE vs partial and name the missing branch.
+
+const LIUHE = [ // 六合 — pair → the element it nominally 化s into (transformation is CONDITIONAL)
+  ["子", "丑", "土"], ["寅", "亥", "木"], ["卯", "戌", "火"],
+  ["辰", "酉", "金"], ["巳", "申", "水"], ["午", "未", "土"],
+];
+const LIUHAI = [["子", "未"], ["丑", "午"], ["寅", "巳"], ["卯", "辰"], ["申", "亥"], ["酉", "戌"]]; // 六害 (穿)
+const SANHE = [ // 三合局 — [生, 旺(中神), 墓, element]
+  ["申", "子", "辰", "水"], ["亥", "卯", "未", "木"],
+  ["寅", "午", "戌", "火"], ["巳", "酉", "丑", "金"],
+];
+const SANHUI = [ // 三会方 — [.,.,., element, direction]
+  ["寅", "卯", "辰", "木", "东方"], ["巳", "午", "未", "火", "南方"],
+  ["申", "酉", "戌", "金", "西方"], ["亥", "子", "丑", "水", "北方"],
+];
+// 三刑 — the ONLY two three-way 刑 frames. A two-member subset is NOT a formed 三刑
+// (the 丑未 error: 丑未 is a 六冲; the 三刑 needs 戌 as well).
+const SANXING = [["丑", "戌", "未", "恃势之刑"], ["寅", "巳", "申", "无恩之刑"]];
+const ZIXING = ["辰", "午", "酉", "亥"]; // 自刑 — a doubled branch punishes itself
+const TIANGAN_HE = [["甲", "己", "土"], ["乙", "庚", "金"], ["丙", "辛", "水"], ["丁", "壬", "木"], ["戊", "癸", "火"]];
+const TIANGAN_CLASH = [["甲", "庚"], ["乙", "辛"], ["丙", "壬"], ["丁", "癸"]]; // 戊/己 (中央土) have no 冲
+
+/**
+ * Normalize any pillar input to [{chart,label,stem,branch,gz}].
+ * Accepts: a chart (has .pillars) · a {year,month,day,hour} pillars object · an array of
+ * "己未" GZ strings · an array of {gz,label} or {stem,branch,label}. Array entries take a
+ * `label` if given, else "p1".."pN" — so 大运/流年 pillars can be passed in with names.
+ */
+function normalizePillars(input, chartLabel) {
+  const src = input && input.pillars ? input.pillars : input;
+  if (!src || typeof src !== "object") throw new Error("relations: pillars must be an object or array");
+  const out = [];
+  const push = (label, stem, branch) => out.push({ chart: chartLabel, label, stem, branch, gz: stem + branch });
+  const read = (p, fallbackLabel) => {
+    if (typeof p === "string") return push(fallbackLabel, p[0], p[1]);
+    if (!p) throw new Error(`relations: empty pillar at ${fallbackLabel}`);
+    const gz = p.gz;
+    const stem = p.stem || (gz && gz[0]);
+    const branch = p.branch || (gz && gz[1]);
+    return push(p.label || fallbackLabel, stem, branch);
+  };
+  if (Array.isArray(src)) src.forEach((p, i) => read(p, `p${i + 1}`));
+  else for (const k of Object.keys(src)) read(src[k], k);
+  for (const p of out) {
+    if (!STEMS.includes(p.stem) || !BRANCHES.includes(p.branch)) {
+      throw new Error(`relations: bad pillar '${p.label}' = ${p.stem}${p.branch}`);
+    }
+  }
+  return out;
+}
+
+/**
+ * Structured 干支 relation findings for one chart, or ACROSS two charts (synastry).
+ *
+ * Single-chart:  relations(chart)            → every relation inside that chart.
+ * Cross-chart:   relations(chartA, chartB)   → ONLY relations whose participants span both
+ *                charts (intra-chart findings are excluded — call relations(x) for those).
+ *
+ * Every finding carries `formed`: true = the relation actually obtains; false = a named
+ * frame that is NOT formed (reported with `missing` so a near-miss is visible without ever
+ * being mistaken for the real thing).
+ *
+ * Types: 六冲 · 六合 · 六害 · 三合 · 半合 · 三合未成 · 三会 · 三会未成 · 三刑 · 三刑未成 ·
+ *        相刑(子卯) · 自刑 · 伏吟 · 反吟 · 天干五合 · 天干相冲
+ *
+ * @param {object|Array} a  chart / pillars / pillar array (see normalizePillars)
+ * @param {object|Array} [b]  second chart → cross-chart mode
+ * @param {object} [opts] {labelA:"A", labelB:"B"}
+ * @returns {{mode, pillars, findings, byType}}
+ */
+function relations(a, b, opts = {}) {
+  const cross = b != null;
+  const labelA = opts.labelA || (cross ? "A" : null);
+  const labelB = opts.labelB || "B";
+  if (cross && labelA === labelB) throw new Error("relations: labelA and labelB must differ (cross-chart findings are identified by chart label)");
+  const A = normalizePillars(a, labelA);
+  const B = cross ? normalizePillars(b, labelB) : [];
+  const all = A.concat(B);
+  const findings = [];
+  const spans = (ps) => !cross || (ps.some((p) => p.chart === labelA) && ps.some((p) => p.chart === labelB));
+  const add = (f) => { if (spans(f.participants)) findings.push(f); };
+
+  // ── pairwise (branch + stem) ──
+  for (let i = 0; i < all.length; i++) {
+    for (let j = i + 1; j < all.length; j++) {
+      const p = all[i], q = all[j];
+      const pair = [p, q];
+      const bi = idxOfBranch(p.branch), bj = idxOfBranch(q.branch);
+      const stemClash = TIANGAN_CLASH.some(([x, y]) => (p.stem === x && q.stem === y) || (p.stem === y && q.stem === x));
+      const branchClash = ((bi - bj + 12) % 12) === 6;
+
+      if (branchClash) add({ type: "六冲", formed: true, branches: [p.branch, q.branch], participants: pair });
+      for (const [x, y, el] of LIUHE) {
+        if ((p.branch === x && q.branch === y) || (p.branch === y && q.branch === x)) {
+          add({ type: "六合", formed: true, branches: [p.branch, q.branch], nominalElement: el,
+                note: "化 is CONDITIONAL (needs month-order/transparent stem support) — element is nominal, not asserted", participants: pair });
+        }
+      }
+      for (const [x, y] of LIUHAI) {
+        if ((p.branch === x && q.branch === y) || (p.branch === y && q.branch === x)) {
+          add({ type: "六害", alias: "穿", formed: true, branches: [p.branch, q.branch], participants: pair });
+        }
+      }
+      // 子卯 — the two-member 无礼之刑 (a genuine 相刑, unlike a 丑未/寅申 subset)
+      if ((p.branch === "子" && q.branch === "卯") || (p.branch === "卯" && q.branch === "子")) {
+        add({ type: "相刑", subtype: "无礼之刑", formed: true, branches: ["子", "卯"], participants: pair });
+      }
+      if (p.branch === q.branch && ZIXING.includes(p.branch)) {
+        add({ type: "自刑", formed: true, branches: [p.branch, q.branch], participants: pair });
+      }
+      // 伏吟 / 反吟 (pillar level). Plain branch-冲 alone is reported above as 六冲.
+      if (p.gz === q.gz) add({ type: "伏吟", level: "柱", formed: true, gz: p.gz, participants: pair });
+      else if (p.branch === q.branch) add({ type: "伏吟", level: "支", formed: true, branch: p.branch, participants: pair });
+      if (stemClash && branchClash) {
+        add({ type: "反吟", level: "柱", formed: true, note: "天克地冲", stems: [p.stem, q.stem], branches: [p.branch, q.branch], participants: pair });
+      }
+      for (const [x, y, el] of TIANGAN_HE) {
+        if ((p.stem === x && q.stem === y) || (p.stem === y && q.stem === x)) {
+          add({ type: "天干五合", formed: true, stems: [p.stem, q.stem], nominalElement: el,
+                note: "化 is CONDITIONAL — element is nominal, not asserted", participants: pair });
+        }
+      }
+      if (stemClash) add({ type: "天干相冲", formed: true, stems: [p.stem, q.stem], participants: pair });
+    }
+  }
+
+  // ── three-branch frames (presence-based over all pillars) ──
+  const byBranch = {};
+  for (const p of all) (byBranch[p.branch] = byBranch[p.branch] || []).push(p);
+  const holders = (br) => byBranch[br] || [];
+  const flat = (brs) => brs.flatMap(holders);
+
+  for (const [sheng, wang, mu, el] of SANHE) {
+    const present = [sheng, wang, mu].filter((br) => holders(br).length);
+    const missing = [sheng, wang, mu].filter((br) => !holders(br).length);
+    if (present.length === 3) {
+      add({ type: "三合", formed: true, complete: true, group: `${sheng}${wang}${mu}`, element: el, branches: present, missing: [], participants: flat(present) });
+    } else if (present.length === 2) {
+      if (present.includes(wang)) {
+        // 半合 — a genuine partial frame, because it contains the 旺神 (中神).
+        add({ type: "半合", formed: true, complete: false, group: `${sheng}${wang}${mu}`, element: el, branches: present, missing, participants: flat(present) });
+      } else {
+        // 生+墓 without the 旺神 — NOT a 半合. Reported unformed so it can never be counted as one.
+        add({ type: "三合未成", formed: false, complete: false, group: `${sheng}${wang}${mu}`, element: el, branches: present, missing,
+              note: `生+墓 without the 旺神 ${wang} — not a 半合`, participants: flat(present) });
+      }
+    }
+  }
+  for (const [x, y, z, el, dir] of SANHUI) {
+    const present = [x, y, z].filter((br) => holders(br).length);
+    const missing = [x, y, z].filter((br) => !holders(br).length);
+    if (present.length === 3) {
+      add({ type: "三会", formed: true, complete: true, group: `${x}${y}${z}`, element: el, direction: dir, branches: present, missing: [], participants: flat(present) });
+    } else if (present.length === 2) {
+      add({ type: "三会未成", formed: false, complete: false, group: `${x}${y}${z}`, element: el, direction: dir, branches: present, missing,
+            note: "三会方 requires all three — no 半会", participants: flat(present) });
+    }
+  }
+  for (const [x, y, z, sub] of SANXING) {
+    const present = [x, y, z].filter((br) => holders(br).length);
+    const missing = [x, y, z].filter((br) => !holders(br).length);
+    if (present.length === 3) {
+      add({ type: "三刑", subtype: sub, formed: true, complete: true, group: `${x}${y}${z}`, branches: present, missing: [], participants: flat(present) });
+    } else if (present.length === 2) {
+      // HARD RULE: two of three is NOT a 三刑. Emitted unformed, under a distinct type,
+      // with the missing branch named (e.g. 丑+未 → missing 戌; 丑未 itself is a 六冲).
+      add({ type: "三刑未成", subtype: sub, formed: false, complete: false, group: `${x}${y}${z}`, branches: present, missing,
+            note: `NOT a formed 三刑 — needs ${missing.join("")}`, participants: flat(present) });
+    }
+  }
+
+  const byType = {};
+  for (const f of findings) (byType[f.type] = byType[f.type] || []).push(f);
+  return { mode: cross ? "cross" : "single", pillars: all, findings, byType };
+}
+
 /**
  * Compute the full bazi chart.
  * @param {object} o {y,m,d,hour,minute,tz,longitude,gender,lateZi}
@@ -246,4 +481,9 @@ function monthlyPillars(solarYear) {
   return out;
 }
 
-module.exports = { computeChart, monthlyPillars, tenGod, nayin, mingGua, STEMS, BRANCHES };
+module.exports = {
+  computeChart, monthlyPillars, tenGod, nayin, mingGua,
+  // relation + strength layer (tested — never hand-roll these in a reading)
+  relations, normalizePillars, elementWeights,
+  STEMS, BRANCHES, HIDDEN, HIDDEN_WEIGHTS,
+};

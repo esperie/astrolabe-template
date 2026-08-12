@@ -72,6 +72,19 @@ console.log(`  纳音: ${P.year.nayin}/${P.month.nayin}/${P.day.nayin}/${P.hour.
 console.log(`  大运 (${b.luck.forward ? "顺" : "逆"}, 起${b.luck.startAgeYears.toFixed(1)}): ${b.luck.list.map((l) => `${l.gz}(${l.startAge})`).join(" ")}`);
 console.log(`  胎元 ${b.taiYuan} · 命宫 ${b.mingGong} · 贵人 ${b.stars.天乙贵人.join("")} · 文昌 ${b.stars.文昌} · 桃花 ${b.stars.桃花} · 驿马 ${b.stars.驿马}`);
 console.log(`  本命卦 ${b.gua.num} ${b.gua.trigram} (${b.gua.group})`);
+// 藏干 element tally + the 干支 relation tables — printed so no reading ever hand-rolls
+// them (bazi.js: elementWeights / relations; both tested).
+{
+  const w = bazi.elementWeights(b).hidden;
+  console.log(`  藏干 (本气1.0/中气0.5/余气0.3): ${["木", "火", "土", "金", "水"].map((k) => `${k}${w[k]}`).join(" · ")}`);
+  const r = bazi.relations(b);
+  const lbl = { year: "年", month: "月", day: "日", hour: "时" };
+  const who = (f) => f.participants.map((p) => lbl[p.label] || p.label).join("");
+  const formed = r.findings.filter((f) => f.formed).map((f) => `${f.type}${f.subtype ? `(${f.subtype})` : ""}${f.level ? `/${f.level}` : ""} ${(f.branches || f.stems || [f.gz || f.branch]).join("")}[${who(f)}]`);
+  const unformed = r.findings.filter((f) => !f.formed).map((f) => `${f.type} ${f.branches.join("")}缺${f.missing.join("")}`);
+  console.log(`  关系: ${formed.length ? formed.join(" · ") : "—"}`);
+  if (unformed.length) console.log(`  未成局 (NOT formed): ${unformed.join(" · ")}`);
+}
 // (用神 / favourable-element analysis is per-person — it lives in the instance canon, not here.)
 
 function ziweiBlock(useTrueSolar) {
@@ -109,6 +122,10 @@ function vedicBlock() {
   console.log(`  Karakas: AK ${k.AK} · AmK ${k.AmK} · BK ${k.BK} · MK ${k.MK} · PiK ${k.PiK} · PuK ${k.PuK} · GK ${k.GK} · DK ${k.DK}`);
   const md = v.dasha.map((n) => `${n.lord}(${vedic.jdToDateStr(n.startJD).slice(0, 4)})`).join(" → ");
   console.log(`  Vimśottari MD: ${md}`);
+  // Pakṣa bala — BOTH convention branches, never collapsed (see vedic.js paksaBala()).
+  const pb = v.paksaBala;
+  console.log(`  Pakṣa: ${pb.tithi.paksa} ${pb.tithi.name}(${pb.tithi.index}) · elong ${pb.elongation.toFixed(2)}° → arc ${pb.reducedArc.toFixed(2)}° · lit ${(pb.illuminatedFraction * 100).toFixed(1)}%`);
+  console.log(`  Pakṣa bala: benefic ${pb.benefic.virupas.toFixed(2)}/60 · malefic ${pb.malefic.virupas.toFixed(2)}/60 — Moon branch UNRESOLVED (byPakṣa ${pb.moonBranch.byPaksa} / byIllumination ${pb.moonBranch.byIllumination})`);
 }
 vedicBlock();
 

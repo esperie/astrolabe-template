@@ -65,6 +65,12 @@ function cast({ y, m, d, hour, minute = 0, tz, longitude, useTrueSolar = true })
   let p = ju;
   for (const s of ORDER) { dipan[p] = s; p = dun === "阳" ? (p === 9 ? 1 : p + 1) : (p === 1 ? 9 : p - 1); }
   const palaceOfStem = (st) => { for (const pp in dipan) if (dipan[pp] === st) return +pp; };
+  // 六仪遁甲: 甲 NEVER sits on the 地盘 (ORDER has no 甲) — it hides under the 旬首仪 of its own 旬
+  // (甲子→戊, 甲戌→己, 甲申→庚, 甲午→辛, 甲辰→壬, 甲寅→癸). Any 甲 stem MUST be resolved through
+  // its 仪 before a plate lookup, or palaceOfStem returns undefined and every downstream rotation
+  // (天盘干/九星/八神) is computed from a garbage index.
+  const yiOfXun = (idx60) => LIUYI[Math.floor(idx60 / 10)];
+  const onPlate = (st, idx60) => (st === "甲" ? yiOfXun(idx60) : st);
 
   // ── 旬首 / 旬空 ──
   const hourIdx = jiaziIndex(hStem, hourBranch);
@@ -77,7 +83,8 @@ function cast({ y, m, d, hour, minute = 0, tz, longitude, useTrueSolar = true })
   // (土五局 cases). NOTE: the 中宫 值符 convention (天禽 vs 天芮) lacks an oracle — flagged via dingju.centerJi.
   const jiPalace = (p) => (p === 5 ? 2 : p);
   const yiPalaceRaw = palaceOfStem(yi);
-  const shiganPalaceRaw = palaceOfStem(hStem);
+  // 甲 hour ⇒ the hour IS its own 旬首, so 时干宫 resolves to the 值符's palace ⇒ shift 0, 天盘 = 地盘.
+  const shiganPalaceRaw = palaceOfStem(onPlate(hStem, hourIdx));
   const yiPalace = jiPalace(yiPalaceRaw);
   const shiganPalace = jiPalace(shiganPalaceRaw);
   const zhiFuStar = HOME_STAR[yiPalace];
@@ -120,12 +127,15 @@ function cast({ y, m, d, hour, minute = 0, tz, longitude, useTrueSolar = true })
   chart[qinTarget].tianStarAlt = "天禽"; chart[qinTarget].tianStemAlt = dipan[5];
 
   // ── Destiny Palace = palace of 天盘日干; door = 值使门 (professional reference convention) ──
-  let destinyPalace; for (const pp in tianStem) if (tianStem[pp] === dayStem) destinyPalace = +pp;
-  if (destinyPalace === undefined && dipan[5] === dayStem) destinyPalace = 2; // 中宫寄坤二: 日干天盘落中宫 → 寄坤2
+  // 六仪遁甲 again: a 甲 day stem is located via the 旬首仪 of the DAY's 旬 (not the hour's).
+  const dayStemOnPlate = onPlate(dayStem, dayIdx);
+  let destinyPalace; for (const pp in tianStem) if (tianStem[pp] === dayStemOnPlate) destinyPalace = +pp;
+  if (destinyPalace === undefined && dipan[5] === dayStemOnPlate) destinyPalace = 2; // 中宫寄坤二: 日干天盘落中宫 → 寄坤2
   const destiny = {
     palace: destinyPalace, direction: DIRECTION[destinyPalace], lifeStem: dayStem,
     door: zhiShiDoor, star: tianStar[destinyPalace], deity: bashen[destinyPalace],
-    note: `Destiny door = 值使门(${zhiShiDoor}); rotated 八门 at this palace = ${bamen[destinyPalace]}`,
+    note: `Destiny door = 值使门(${zhiShiDoor}); rotated 八门 at this palace = ${bamen[destinyPalace]}`
+      + (dayStem === "甲" ? `; 日干甲遁${dayStemOnPlate} (${STEMS[dayIdx % 10] + BRANCHES[dayIdx % 12]}旬首仪)` : ""),
   };
 
   return {

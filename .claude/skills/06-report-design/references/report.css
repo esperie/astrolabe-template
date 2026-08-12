@@ -1,0 +1,111 @@
+/* Astrolabe report stylesheet — implements SKILL.md §2 (colour), §6.7–6.8 (visual + typography).
+ *
+ * The three accent tokens are DERIVED PER READER and injected at render time by
+ * .claude/bin/render-reading.mjs:
+ *     --accent-1  := 用神 #1   (actions, emphasis, "do this")
+ *     --accent-2  := 用神 #2   (money, outcomes)
+ *     --risk      := 忌神 #1   (risk, drain — ALWAYS also prefixed with a word, never hue alone)
+ * The values below are the framework default (steel / earth / functional red) used when no chart
+ * is available. A reader's own palette overrides them via a :root block written by the renderer.
+ */
+
+:root {
+  --accent-1: #4A5A6A; --accent-1-tint: #EDF1F5; --accent-1-ink: #2C3641;
+  --accent-2: #9A6B1E; --accent-2-tint: #FBF1DC; --accent-2-ink: #5E4112;
+  --risk:     #B3261E; --risk-tint:     #FBE9E7; --risk-ink:     #7A1912;
+
+  --bg: #FFFFFF; --surface: #F7F8FA; --ink: #14181C; --ink-muted: #5A646E; --rule: #DDE2E8;
+
+  --measure: 74ch;
+  --font-body: ui-serif, Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+  --font-ui: ui-sans-serif, -apple-system, "Helvetica Neue", "PingFang SC", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1418; --surface: #161C22; --ink: #E9EDF1; --ink-muted: #A0AAB4; --rule: #2A333B;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1418; --surface: #161C22; --ink: #E9EDF1; --ink-muted: #A0AAB4; --rule: #2A333B;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; padding: 3rem 1.5rem 6rem;
+  background: var(--bg); color: var(--ink);
+  font: 400 17px/1.65 var(--font-body);
+  overflow-x: hidden;
+}
+main, .report { max-width: var(--measure); margin: 0 auto; }
+
+/* ── Headings carry information, not labels (SKILL §6.8) ───────────────────── */
+h1, h2, h3, h4 { font-family: var(--font-ui); line-height: 1.25; text-wrap: balance; }
+h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.015em; margin: 0 0 .4em; }
+h2 {
+  font-size: 1.3rem; font-weight: 600; margin: 3.2rem 0 .9rem;
+  padding-top: .9rem; border-top: 1px solid var(--rule);
+}
+h3 { font-size: 1.06rem; font-weight: 600; margin: 2rem 0 .6rem; }
+h4 { font-size: .97rem; font-weight: 600; margin: 1.4rem 0 .4rem; color: var(--ink-muted); }
+
+p, li { margin: 0 0 .85em; }
+strong { font-weight: 700; }
+a { color: var(--accent-1); text-underline-offset: 2px; }
+
+/* ── The document header block (assumptions, tier, convergence) ────────────── */
+blockquote {
+  margin: 1.5rem 0; padding: 1rem 1.1rem;
+  background: var(--surface); border-left: 3px solid var(--accent-1);
+  border-radius: 0 4px 4px 0; font-size: .95em;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+/* Risk callouts: hue is NEVER the only signal — the source text also carries the word "Risk —". */
+blockquote.risk { border-left-color: var(--risk); background: var(--risk-tint); color: var(--risk-ink); }
+blockquote.action { border-left-color: var(--accent-1); }
+blockquote.money  { border-left-color: var(--accent-2); }
+
+/* ── Tables: preferred over prose past three parallel items (SKILL §6.7) ───── */
+.table-wrap { overflow-x: auto; margin: 1.4rem 0; border: 1px solid var(--rule); border-radius: 5px; }
+table { border-collapse: collapse; width: 100%; font: 400 14.5px/1.5 var(--font-ui); }
+th, td { padding: .55rem .7rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+thead th {
+  background: var(--surface); font-weight: 600; font-size: .82rem;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--ink-muted);
+  position: sticky; top: 0;
+}
+tbody tr:last-child td { border-bottom: 0; }
+
+/* ── Code / calculator provenance (SKILL §6.1) ─────────────────────────────── */
+code { font: 400 .88em/1.4 var(--font-mono); background: var(--surface); padding: .12em .35em; border-radius: 3px; }
+pre { overflow-x: auto; background: var(--surface); padding: .9rem 1rem; border-radius: 5px; border: 1px solid var(--rule); }
+pre code { background: none; padding: 0; }
+
+/* Uncertainty is muted and italic — never a hue (palette.md §4). */
+code:has(+ *), .unverified { color: var(--ink-muted); }
+
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2.6rem 0; }
+
+/* Struck-through residuals = closed, kept visible rather than deleted. */
+del { color: var(--ink-muted); text-decoration-thickness: 1px; }
+
+ul, ol { padding-left: 1.35rem; }
+li::marker { color: var(--ink-muted); }
+
+/* ── Print / PDF (SKILL §7): palette must survive grayscale ────────────────── */
+@page { size: A4; margin: 18mm 16mm 20mm; }
+@media print {
+  body { padding: 0; font-size: 10.5pt; background: #fff; color: #000; }
+  main, .report { max-width: none; }
+  h2 { break-after: avoid; page-break-after: avoid; }
+  table, blockquote, pre { break-inside: avoid; page-break-inside: avoid; }
+  thead { display: table-header-group; }
+  thead th { position: static; }
+  a { color: inherit; text-decoration: none; }
+  blockquote { background: #f4f4f4 !important; color: #000 !important; }
+  /* Risk keeps a heavier rule so it survives desaturation. */
+  blockquote.risk { border-left-width: 5px; }
+}

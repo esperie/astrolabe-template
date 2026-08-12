@@ -76,10 +76,18 @@ const z = ziwei.chartFromSolar({ ...I, useTrueSolar: true });
 ok("ziwei [regression] 命宫酉 · 金四局 · 命主文曲",
   z.mingGong.branch === "酉" && z.wuxingJu === "金四局" && z.mingZhu === "文曲",
   `${z.mingGong.branch}/${z.wuxingJu}/${z.mingZhu}`);
+// Einstein's hour pillar is 甲午 — a 六仪遁甲 case. The pre-2026-08-12 lock pinned Destiny宫2,
+// which was CORRUPTED output: 甲 is absent from the 地盘, so 时干宫 came back undefined and the
+// 天盘 rotation ran off a −1 index. Re-pinned to the corrected chart. The 定局/值符星/值使门/值使宫
+// layer never depended on 时干宫 and is byte-identical across the fix (阳遁1局 · 天辅 · 杜门 @宫4).
 const q = qimen.cast(I);
-ok("qimen [regression] 阳遁1局 · Destiny宫2 杜门",
-  q.dingju.label === "阳遁1局" && q.destiny.palace === 2 && q.destiny.door === "杜门",
-  `${q.dingju.label}/${q.destiny.palace}/${q.destiny.door}`);
+ok("qimen [regression] 阳遁1局 · 值符星天辅 · 值使门杜门@宫4",
+  q.dingju.label === "阳遁1局" && q.zhiFuStar === "天辅" && q.zhiShiDoor === "杜门" && q.zhiShiPalace === 4,
+  `${q.dingju.label}/${q.zhiFuStar}/${q.zhiShiDoor}/${q.zhiShiPalace}`);
+ok("qimen [regression] 甲午时 → 时干宫4 (甲遁辛) · shift=0 · Destiny 艮8 天任/九地/杜门",
+  q.shiganPalace === 4 && [1, 8, 3, 4, 9, 2, 7, 6].every((p) => q.chart[p].tianStem === q.chart[p].diPan) &&
+  q.destiny.palace === 8 && q.destiny.star === "天任" && q.destiny.deity === "九地" && q.destiny.door === "杜门",
+  `${q.shiganPalace}/${q.destiny.palace}/${q.destiny.star}/${q.destiny.deity}/${q.destiny.door}`);
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

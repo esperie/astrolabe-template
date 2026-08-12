@@ -10,6 +10,7 @@
       ".claude/agents/management",
       ".claude/skills/03-destiny-systems",
       ".claude/skills/04-decision-method",
+      ".claude/skills/06-report-design",
       ".claude/rules"
     ],
     "files": [
@@ -22,6 +23,7 @@
       ".claude/bin/sync-manifest.json",
       ".claude/bin/emit-cli-artifacts.mjs",
       ".claude/bin/install-git-guard.mjs",
+      ".claude/bin/render-reading.mjs",
       ".claude/settings.json",
       ".githooks/pre-commit",
       "eval/model-bench/run.mjs",

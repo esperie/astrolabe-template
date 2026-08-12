@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Astrolabe Report Exemplar</title>
+<style>
+/* ============================================================================
+   ASTROLABE REPORT DESIGN SYSTEM — rendered exemplar (SKILL.md §6.10)
+   Self-contained: no external requests of any kind. No fonts, no CDNs, no images.
+   Framework file: contains NO reader data. All content is illustrative.
+
+   THEME CONTRACT (three viewer states, per SKILL.md §7 + the artifact theme rule):
+     1. bare :root                          -> the complete LIGHT palette
+     2. @media (prefers-color-scheme: dark) -> guarded :root:not([data-theme="light"])
+     3. :root[data-theme="dark"]            -> the explicit toggle wins either way
+   No colour is ever declared only inside a media or [data-theme] block. Components
+   style through tokens only. The literal hexes below appear in exactly two places:
+   the token blocks, and the swatch specimens in §2.1 (where the hex IS the content).
+   ========================================================================== */
+
+/* --- 1. LIGHT (bare :root) — the complete palette ------------------------- */
+:root {
+  color-scheme: light dark;
+
+  /* grounds & ink — a steel-biased neutral, not a pure grey */
+  --bg:          #F1F4F7;
+  --surface:     #FFFFFF;
+  --surface-2:   #E8ECF1;
+  --ink:         #101519;
+  --ink-muted:   #4E5A66;
+  --rule:        #D3DAE2;
+  --rule-strong: #B4BFCC;
+  --shadow:      0 1px 2px rgba(16,21,25,.06), 0 6px 18px -12px rgba(16,21,25,.22);
+
+  /* ELEMENT HUE ANCHORS (SKILL.md §2.1).
+     -edge = the published anchor, used for rules, fills and UI edges (>=3:1).
+     bare  = the text-weight value (>=4.5:1 on every ground this page uses).
+     They differ only for 火 and 土 in light mode — see the contrast table. */
+  --wood:  #1F6F4A;  --wood-edge:  #1F6F4A;  --wood-tint:  #E3F0E9;
+  --fire:  #B63C0B;  --fire-edge:  #C2410C;  --fire-tint:  #FDEDE4;
+  --earth: #8E621B;  --earth-edge: #9A6B1E;  --earth-tint: #F8EFDC;
+  --metal: #4A5A6A;  --metal-edge: #4A5A6A;  --metal-tint: #E7ECF1;
+  --water: #1F5FA8;  --water-edge: #1F5FA8;  --water-tint: #E4EDF9;
+  --red:   #A32014;  --red-edge:   #A32014;  --red-tint:   #FBE7E4;
+}
+
+/* --- 2. DARK via system preference, guarded so an explicit light choice wins */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:          #0F141A;
+    --surface:     #161D25;
+    --surface-2:   #1E2731;
+    --ink:         #E7ECF2;
+    --ink-muted:   #97A4B2;
+    --rule:        #29323D;
+    --rule-strong: #3C4857;
+    --shadow:      0 1px 2px rgba(0,0,0,.5), 0 8px 24px -14px rgba(0,0,0,.8);
+
+    --wood:  #5FD39B;  --wood-edge:  #5FD39B;  --wood-tint:  #10251C;
+    --fire:  #FF9E64;  --fire-edge:  #FF9E64;  --fire-tint:  #2A1A10;
+    --earth: #E7B85C;  --earth-edge: #E7B85C;  --earth-tint: #26200F;
+    --metal: #A9BDD1;  --metal-edge: #A9BDD1;  --metal-tint: #1B242E;
+    --water: #7FB4F5;  --water-edge: #7FB4F5;  --water-tint: #121F30;
+    --red:   #FF8F7A;  --red-edge:   #FF8F7A;  --red-tint:   #2C1512;
+  }
+}
+
+/* --- 3. DARK via explicit toggle — same tokens, so the toggle wins on a light OS */
+:root[data-theme="dark"] {
+  --bg:          #0F141A;
+  --surface:     #161D25;
+  --surface-2:   #1E2731;
+  --ink:         #E7ECF2;
+  --ink-muted:   #97A4B2;
+  --rule:        #29323D;
+  --rule-strong: #3C4857;
+  --shadow:      0 1px 2px rgba(0,0,0,.5), 0 8px 24px -14px rgba(0,0,0,.8);
+
+  --wood:  #5FD39B;  --wood-edge:  #5FD39B;  --wood-tint:  #10251C;
+  --fire:  #FF9E64;  --fire-edge:  #FF9E64;  --fire-tint:  #2A1A10;
+  --earth: #E7B85C;  --earth-edge: #E7B85C;  --earth-tint: #26200F;
+  --metal: #A9BDD1;  --metal-edge: #A9BDD1;  --metal-tint: #1B242E;
+  --water: #7FB4F5;  --water-edge: #7FB4F5;  --water-tint: #121F30;
+  --red:   #FF8F7A;  --red-edge:   #FF8F7A;  --red-tint:   #2C1512;
+}
+
+/* --- 4. THE DERIVATION LAYER (SKILL.md §2.2) -----------------------------
+   Semantic roles map onto element tokens. Both mappings below are theme-blind:
+   they point at tokens that already resolve per theme. This is the actual
+   mechanism — a reader's palette is three lines of assignment, nothing else. */
+
+/* Framework default (§2.4): steel primary, amber secondary, deep red risk.
+   Used for this document's own chrome, because a design showcase is not a person. */
+:root {
+  --accent:      var(--metal);   --accent-edge:   var(--metal-edge);   --accent-tint:   var(--metal-tint);
+  --accent-2:    var(--earth);   --accent-2-edge: var(--earth-edge);   --accent-2-tint: var(--earth-tint);
+  --risk:        var(--red);     --risk-edge:     var(--red-edge);     --risk-tint:     var(--red-tint);
+}
+
+/* The worked reader (§2.2): 用神 火 -> 土, 忌神 水.
+   Fire is favourable, so fire carries ACTION. Water is unfavourable, so the
+   risk colour is BLUE. Nothing else in the stylesheet changes. */
+.palette-derived {
+  --accent:      var(--fire);    --accent-edge:   var(--fire-edge);    --accent-tint:   var(--fire-tint);
+  --accent-2:    var(--earth);   --accent-2-edge: var(--earth-edge);   --accent-2-tint: var(--earth-tint);
+  --risk:        var(--water);   --risk-edge:     var(--water-edge);   --risk-tint:     var(--water-tint);
+}
+
+/* ============================================================================
+   TYPE — three roles, each earning its place
+     serif : running prose and headings (a reading is read, not scanned)
+     ui    : tables, labels, chips, data (an instrument is scanned, not read)
+     mono  : commands, hexes, ratios (things that must be copied exactly)
+   No webfonts: the CSP forbids external requests and a silent fallback is worse
+   than a considered stack.
+   ========================================================================== */
+:root {
+  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Charter", Georgia, serif;
+  --ui:    ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono:  ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --han:   "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", "Hiragino Mincho ProN", "PingFang SC", serif;
+
+  --measure: 68ch;
+  --s1: .35rem; --s2: .7rem; --s3: 1.1rem; --s4: 1.75rem; --s5: 2.75rem; --s6: 4.25rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);           /* explicit token ground — never transparent */
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.62;
+  overflow-x: hidden;              /* the page never scrolls sideways */
+  -webkit-font-smoothing: antialiased;
+}
+@media (min-width: 900px) { body { font-size: 17.5px; } }
+
+/* --- layout: centred measure, with a breakout column for wide content ----- */
+.page {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(var(--s3), 1fr)
+    [wide-start] minmax(0, max(0px, calc((1100px - var(--measure)) / 2)))
+    /* the measure must subtract its own gutters, or the five tracks sum to more
+       than the container and the page clips on a phone */
+    [text-start] min(var(--measure), calc(100% - 2 * var(--s3))) [text-end]
+    minmax(0, max(0px, calc((1100px - var(--measure)) / 2))) [wide-end]
+    minmax(var(--s3), 1fr) [full-end];
+  row-gap: 0;
+  padding: var(--s5) 0 var(--s6);
+}
+.page > * { grid-column: text; }
+.page > .wide { grid-column: wide; }
+
+/* --- headings: information, never labels (§6.8) --------------------------- */
+h1, h2, h3, h4 { font-family: var(--serif); text-wrap: balance; margin: 0; font-weight: 600; letter-spacing: -.011em; }
+h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem); line-height: 1.1; letter-spacing: -.022em; }
+h2 { font-size: clamp(1.4rem, 1.15rem + 1vw, 1.85rem); line-height: 1.2; }
+h3 { font-size: 1.16rem; line-height: 1.3; }
+h4 { font-size: 1rem; line-height: 1.35; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+
+/* vertical rhythm through the grid rather than per-element margins */
+.page > * + * { margin-top: var(--s3); }
+.page > h2 { margin-top: var(--s6); }
+.page > .lede { margin-top: var(--s2); }
+
+/* --- small type roles ----------------------------------------------------- */
+.eyebrow {
+  font-family: var(--ui); font-size: .66rem; font-weight: 600;
+  letter-spacing: .13em; text-transform: uppercase; color: var(--ink-muted);
+}
+.lede { font-size: 1.12rem; color: var(--ink-muted); text-wrap: pretty; }
+.fine { font-family: var(--ui); font-size: .82rem; line-height: 1.55; color: var(--ink-muted); }
+code, .mono { font-family: var(--mono); font-size: .84em; font-variant-ligatures: none; }
+code {
+  background: var(--surface-2); border: 1px solid var(--rule);
+  border-radius: 3px; padding: .08em .34em;
+}
+.han { font-family: var(--han); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ============================================================================
+   MASTHEAD
+   ========================================================================== */
+.masthead { border-bottom: 1px solid var(--rule-strong); padding-bottom: var(--s3); }
+.masthead__top {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  justify-content: space-between; gap: var(--s2); margin-bottom: var(--s3);
+}
+.tierline {
+  display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3);
+  font-family: var(--ui); font-size: .78rem; color: var(--ink-muted);
+  margin-top: var(--s3); padding-top: var(--s2); border-top: 1px solid var(--rule);
+}
+.tierline b { color: var(--ink); font-weight: 600; }
+
+.themeswitch {
+  font-family: var(--ui); font-size: .74rem; font-weight: 600; letter-spacing: .06em;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--rule-strong);
+  border-radius: 3px; padding: .42em .9em; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .5em;
+}
+.themeswitch:hover { border-color: var(--accent-edge); }
+.themeswitch__dot {
+  width: .62em; height: .62em; border-radius: 50%;
+  border: 1px solid currentColor; background: linear-gradient(105deg, currentColor 50%, transparent 50%);
+}
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-edge); outline-offset: 3px; border-radius: 2px;
+}
+
+/* ============================================================================
+   PLATE — the base component surface. Small radius: an instrument face, not a card.
+   ========================================================================== */
+.plate {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 4px; box-shadow: var(--shadow);
+  padding: var(--s3) var(--s4) var(--s4);
+}
+.plate__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: var(--s2); padding-bottom: var(--s2); margin-bottom: var(--s3);
+  border-bottom: 1px solid var(--rule);
+}
+.plate__ref { font-family: var(--mono); font-size: .72rem; color: var(--ink-muted); white-space: nowrap; }
+.plate > * + * { margin-top: var(--s3); }
+.plate__head + * { margin-top: 0; }
+
+.stack   { display: flex; flex-direction: column; gap: var(--s3); }
+.stack-s { display: flex; flex-direction: column; gap: var(--s2); }
+
+/* ============================================================================
+   NOTE — the callout. Meaning is carried by the PREFIX WORD (§2.3), never hue.
+   ========================================================================== */
+.note {
+  border-left: 3px solid var(--rule-strong); background: var(--surface-2);
+  padding: var(--s2) var(--s3); border-radius: 0 4px 4px 0;
+}
+.note--action { border-left-color: var(--accent-edge);   background: var(--accent-tint); }
+.note--sub    { border-left-color: var(--accent-2-edge); background: var(--accent-2-tint); }
+.note--risk   { border-left-color: var(--risk-edge);     background: var(--risk-tint); }
+.note__label {
+  font-family: var(--ui); font-weight: 700; font-size: .78rem;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.note--action .note__label { color: var(--accent); }
+.note--sub    .note__label { color: var(--accent-2); }
+.note--risk   .note__label { color: var(--risk); }
+.note p { margin-top: .2em; }
+
+/* ============================================================================
+   TABLES — wide content scrolls in its own container (§6.7)
+   ========================================================================== */
+.scroller {
+  overflow-x: auto; overscroll-behavior-x: contain;
+  border: 1px solid var(--rule); border-radius: 4px; background: var(--surface);
+}
+table { border-collapse: collapse; width: 100%; font-family: var(--ui); font-size: .84rem; }
+caption {
+  caption-side: top; text-align: left; font-family: var(--ui); font-size: .78rem;
+  color: var(--ink-muted); padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--rule); background: var(--surface-2);
+}
+th, td { padding: .52rem var(--s2); text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th {
+  font-size: .68rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-muted); white-space: nowrap; background: var(--surface);
+}
+tbody tr:last-child td { border-bottom: 0; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rowgroup td {
+  background: var(--surface-2); font-family: var(--ui); font-size: .68rem; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--ink-muted);
+}
+.verdict-pass { color: var(--ink-muted); font-weight: 600; }
+.verdict-fail { color: var(--risk); font-weight: 700; }
+.dd th:first-child, .dd td:first-child { width: 50%; border-right: 1px solid var(--rule); }
+.dd td { font-family: var(--serif); font-size: .92rem; }
+
+/* ============================================================================
+   SWATCH SPECIMENS (§2.1). The only place literal hexes are painted, because
+   here the colour IS the content: each chip shows an accent on its own mode's
+   ground, so the chip is the contrast test it describes.
+   ========================================================================== */
+.swatches { display: grid; gap: var(--s2); }
+.swatch {
+  display: grid; gap: var(--s2);
+  grid-template-columns: minmax(7.5rem, 1fr) repeat(2, minmax(0, 1.35fr));
+  align-items: stretch;
+}
+.swatch__name { display: flex; flex-direction: column; justify-content: center; gap: .1em; }
+.swatch__el { font-family: var(--han); font-size: 1.05rem; font-weight: 600; }
+.swatch__role { font-family: var(--ui); font-size: .72rem; color: var(--ink-muted); }
+.chip {
+  border: 1px solid var(--rule); border-radius: 3px; padding: .5rem .7rem;
+  display: flex; flex-direction: column; gap: .1rem; min-width: 0;
+}
+.chip__sample { font-family: var(--serif); font-size: 1rem; font-weight: 600; line-height: 1.2; }
+/* only the SAMPLE line wears the accent — it is the specimen. The caption is
+   metadata and takes the ground's own muted ink, so it stays readable even on
+   the one chip that is deliberately painted at a failing value. */
+.chip__meta { font-family: var(--mono); font-size: .68rem; }
+.chip--light .chip__meta { color: #4E5A66; }
+.chip--dark  .chip__meta { color: #97A4B2; }
+.swatch__head {
+  display: grid; gap: var(--s2);
+  grid-template-columns: minmax(7.5rem, 1fr) repeat(2, minmax(0, 1.35fr));
+}
+.swatch__head span { font-family: var(--ui); font-size: .66rem; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; color: var(--ink-muted); }
+@media (max-width: 640px) {
+  .swatch, .swatch__head { grid-template-columns: 1fr 1fr; }
+  /* the mode labels stay — they name which chip is which, and dropping a label
+     would leave the ground colour as the only signal */
+  .swatch__name, .swatch__head span:first-child { grid-column: 1 / -1; }
+}
+
+/* --- the derivation strip ------------------------------------------------- */
+.derive { display: grid; gap: var(--s2); grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+.derive__cell { border: 1px solid var(--rule); border-radius: 4px; padding: var(--s2) var(--s3); background: var(--surface-2); }
+.derive__cell--1 { border-left: 3px solid var(--accent-edge); }
+.derive__cell--2 { border-left: 3px solid var(--accent-2-edge); }
+.derive__cell--r { border-left: 3px solid var(--risk-edge); }
+.derive__role { font-family: var(--ui); font-size: .66rem; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; color: var(--ink-muted); }
+.derive__val { font-family: var(--han); font-size: 1.25rem; font-weight: 600; margin-top: .15em; }
+.derive__cell--1 .derive__val { color: var(--accent); }
+.derive__cell--2 .derive__val { color: var(--accent-2); }
+.derive__cell--r .derive__val { color: var(--risk); }
+.derive__note { font-family: var(--ui); font-size: .76rem; color: var(--ink-muted); margin-top: .25em; }
+
+/* ============================================================================
+   READING COMPONENTS
+   ========================================================================== */
+/* decision card — the one component with a hard line budget (<=5 lines, §0) */
+.decision { border-top: 3px solid var(--accent-edge); }
+.decision__lines { display: grid; gap: .55rem; }
+.decision__line { display: grid; grid-template-columns: 5.4rem 1fr; gap: var(--s2); align-items: baseline; }
+.decision__key {
+  font-family: var(--ui); font-size: .68rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--ink-muted); padding-top: .28em;
+}
+.decision__line--gate .decision__key { color: var(--risk); }
+@media (max-width: 560px) { .decision__line { grid-template-columns: 1fr; gap: .1rem; } }
+
+.band {
+  display: inline-flex; align-items: baseline; gap: .45em;
+  font-family: var(--ui); font-size: .8rem; font-weight: 700;
+  border: 1px solid var(--rule-strong); border-radius: 3px; padding: .12em .5em;
+  background: var(--surface-2); font-variant-numeric: tabular-nums;
+}
+.band small { font-weight: 500; color: var(--ink-muted); }
+
+/* gloss — term / meaning / consequence (§3.2) */
+.gloss { border-left: 3px solid var(--accent-2-edge); padding-left: var(--s3); }
+.gloss__term { font-family: var(--han); font-size: 1.3rem; font-weight: 600; line-height: 1.35; }
+.gloss__rom { font-family: var(--ui); font-size: .82rem; color: var(--ink-muted); letter-spacing: .02em; }
+.gloss__rows { display: grid; gap: .55rem; margin-top: var(--s2); }
+.gloss__row { display: grid; grid-template-columns: 9.5rem 1fr; gap: var(--s2); }
+.gloss__k { font-family: var(--ui); font-size: .68rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-muted); padding-top: .3em; }
+@media (max-width: 560px) { .gloss__row { grid-template-columns: 1fr; gap: .1rem; } }
+
+/* the three-part move (§4) */
+.move { counter-reset: move; display: grid; gap: var(--s3); }
+.move__step { display: grid; grid-template-columns: 1.65rem 1fr; gap: var(--s2); }
+.move__step::before {
+  counter-increment: move; content: counter(move);
+  font-family: var(--mono); font-size: .74rem; font-weight: 700; color: var(--ink-muted);
+  border: 1px solid var(--rule-strong); border-radius: 50%;
+  width: 1.65rem; height: 1.65rem; display: grid; place-items: center; margin-top: .1rem;
+}
+.move__k { font-family: var(--ui); font-size: .68rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-muted); display: block; }
+.lapse { color: var(--accent); font-weight: 600; }
+.price {
+  display: inline-block; font-family: var(--ui); font-size: .74rem; font-weight: 600;
+  border: 1px dashed var(--rule-strong); border-radius: 3px; padding: .1em .5em; color: var(--ink-muted);
+}
+.cmd {
+  display: block; font-family: var(--mono); font-size: .78rem; color: var(--ink-muted);
+  background: var(--surface-2); border: 1px solid var(--rule); border-left: 3px solid var(--rule-strong);
+  border-radius: 0 3px 3px 0; padding: .4em .7em; margin-top: .4em; overflow-x: auto; white-space: pre;
+}
+
+/* prediction ledger (§6.2) */
+.pred__rows { display: grid; gap: .55rem; }
+.pred__row { display: grid; grid-template-columns: 8.5rem 1fr; gap: var(--s2); }
+.pred__k { font-family: var(--ui); font-size: .68rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-muted); padding-top: .3em; }
+@media (max-width: 560px) { .pred__row { grid-template-columns: 1fr; gap: .1rem; } }
+
+/* convergence / residuals (§6.9) */
+.rounds { display: grid; gap: var(--s2); }
+.round { display: grid; grid-template-columns: 4.6rem 1fr; gap: var(--s2); align-items: start; }
+.round__n { font-family: var(--ui); font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-muted); padding-top: .22em; }
+.status {
+  display: inline-flex; align-items: center; gap: .45em;
+  font-family: var(--ui); font-size: .72rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  border: 1px solid currentColor; border-radius: 3px; padding: .1em .5em;
+}
+.status--open  { color: var(--risk); }
+.status--clean { color: var(--ink-muted); }
+.residuals { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s2); }
+.residuals li { padding-left: 1.15rem; position: relative; }
+.residuals li::before { content: "—"; position: absolute; left: 0; color: var(--ink-muted); font-family: var(--mono); }
+.unverified {
+  font-family: var(--ui); font-size: .7rem; font-weight: 700; letter-spacing: .06em;
+  color: var(--risk); border: 1px solid currentColor; border-radius: 3px; padding: .04em .38em; white-space: nowrap;
+}
+
+/* ============================================================================
+   TIMELINE (§6.7)
+   ========================================================================== */
+figure { margin: 0; }
+.figwrap { overflow-x: auto; overscroll-behavior-x: contain; }
+.figwrap svg { display: block; min-width: 840px; width: 100%; height: auto; }
+figcaption { font-family: var(--ui); font-size: .8rem; line-height: 1.55; color: var(--ink-muted); margin-top: var(--s2); }
+figcaption b { color: var(--ink); font-weight: 600; }
+.tl-span   { fill: currentColor; fill-opacity: .055; stroke: var(--rule-strong); stroke-width: 1; }
+.tl-empty  { fill: none; stroke: var(--rule-strong); stroke-width: 1; stroke-dasharray: 4 4; }
+/* a single-system boundary is a light rule; a corroborated one is heavy. Weight
+   carries the distinction, so it survives grayscale and colour-blind reading —
+   the accent and the band are reinforcement, never the only channel. */
+.tl-bound  { stroke: currentColor; stroke-width: 1.4; stroke-opacity: .42; }
+.tl-hinge  { stroke: var(--accent-edge); stroke-width: 3; }
+.tl-band   { fill: var(--accent-edge); fill-opacity: .1; }
+.tl-axis   { stroke: currentColor; stroke-opacity: .45; stroke-width: 1; }
+.tl-lab    { fill: currentColor; font-family: var(--ui); font-size: 12px; }
+.tl-sys    { fill: currentColor; font-family: var(--ui); font-size: 12px; font-weight: 600; }
+.tl-span-l { fill: currentColor; fill-opacity: .72; font-family: var(--ui); font-size: 11.5px; }
+.tl-year   { fill: currentColor; fill-opacity: .6; font-family: var(--ui); font-size: 10px; font-weight: 700; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.tl-tick   { fill: currentColor; fill-opacity: .55; font-family: var(--ui); font-size: 11px; font-variant-numeric: tabular-nums; }
+.tl-hinge-l{ fill: var(--accent); font-family: var(--ui); font-size: 11.5px; font-weight: 700; }
+.tl-mute   { fill: currentColor; fill-opacity: .5; font-family: var(--ui); font-size: 11.5px; font-style: italic; }
+.tl-key { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); margin-top: var(--s2); font-family: var(--ui); font-size: .76rem; color: var(--ink-muted); }
+/* the legend marks mirror the drawing: a hinge is a full-height rule, a
+   single-system boundary is a short track-local tick. Height carries it, so the
+   key reads without colour. */
+.tl-key span { display: inline-flex; align-items: center; gap: .55em; }
+.tl-key i { width: 0; height: 1.2rem; display: inline-block; border-left: 3px solid currentColor; }
+.tl-key .k-hinge { color: var(--accent); }
+.tl-key .k-bound i { border-left-width: 1.4px; opacity: .45; }
+
+/* ============================================================================
+   EXCERPT — the derived palette in situ
+   ========================================================================== */
+.excerpt {
+  border: 1px solid var(--rule-strong); border-radius: 5px; background: var(--bg);
+  padding: var(--s4); display: grid; gap: var(--s3);
+}
+.excerpt__bar {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: var(--s2); padding-bottom: var(--s2); border-bottom: 1px solid var(--rule);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .themeswitch { transition: border-color .15s ease; }
+}
+@media print {
+  .themeswitch { display: none; }
+  .plate, .scroller, .excerpt { box-shadow: none; break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+  <!-- ====================== MASTHEAD ====================== -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <p class="eyebrow">Astrolabe · report design system · reference exemplar</p>
+      <button type="button" class="themeswitch" id="themeswitch" aria-live="polite">
+        <span class="themeswitch__dot" aria-hidden="true"></span><span id="themelabel">Theme: System</span>
+      </button>
+    </div>
+    <h1>How a reading looks when the design system is doing its job</h1>
+    <p class="lede" style="margin-top:var(--s2)">
+      Every component the system specifies, rendered once so it can be copied rather than re-invented.
+      A design system without an exemplar degrades within three documents — this is the exemplar
+      <code>SKILL.md §6.10</code> requires.
+    </p>
+    <div class="tierline">
+      <span><b>Redaction tier:</b> Framework</span>
+      <span><b>Reader data:</b> none — all content illustrative</span>
+      <span><b>Palette:</b> framework default (§2.4)</span>
+      <span><b>Requests:</b> zero external</span>
+    </div>
+  </header>
+
+  <p>
+    Two things are demonstrated here and nothing else. First, <b>the colour system</b> — the element
+    anchors, one worked derivation from a reader's <span class="han" lang="zh-Hans">用神</span>, and the measured
+    contrast of every accent on every ground it is allowed to sit on. Second, <b>the components</b> — the
+    decision card, the gloss, the finding, the prediction, the timeline, the convergence block, and the
+    tone contract. The last section composes a handful of them into a short report excerpt under a
+    <i>different</i> reader's palette, which is the only way to see that the derivation actually works.
+  </p>
+
+  <!-- ====================== §2.1 ANCHORS ====================== -->
+  <h2>The five element anchors, and what they cost in contrast</h2>
+  <p>
+    The anchors are published in <code>§2.1</code>. Each chip below paints the accent on its own mode's
+    page ground, so the chip <i>is</i> the contrast test — not an illustration of one. Both modes are
+    shown side by side deliberately: a theme toggle can only ever show you one at a time, and a palette
+    has to be judged as a pair.
+  </p>
+
+  <div class="plate wide">
+    <div class="plate__head">
+      <h3>Element → hue, both modes</h3>
+      <span class="plate__ref">§2.1</span>
+    </div>
+    <div class="swatches">
+      <div class="swatch__head">
+        <span>Element</span><span>Light — on #F1F4F7</span><span>Dark — on #0F141A</span>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch__name"><span class="swatch__el">木 Wood</span><span class="swatch__role">growth · peers</span></div>
+        <div class="chip chip--light" style="background:#F1F4F7;color:#1F6F4A">
+          <span class="chip__sample">Grow the bench</span><span class="chip__meta">#1F6F4A · 5.54:1</span>
+        </div>
+        <div class="chip chip--dark" style="background:#0F141A;color:#5FD39B">
+          <span class="chip__sample">Grow the bench</span><span class="chip__meta">#5FD39B · 9.93:1</span>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch__name"><span class="swatch__el">火 Fire</span><span class="swatch__role">output · visibility</span></div>
+        <div class="chip chip--light" style="background:#F1F4F7;color:#C2410C">
+          <span class="chip__sample">Ship and teach</span><span class="chip__meta">#C2410C · 4.69:1</span>
+        </div>
+        <div class="chip chip--dark" style="background:#0F141A;color:#FF9E64">
+          <span class="chip__sample">Ship and teach</span><span class="chip__meta">#FF9E64 · 9.10:1</span>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch__name"><span class="swatch__el">土 Earth</span><span class="swatch__role">wealth · ground</span></div>
+        <div class="chip chip--light" style="background:#F1F4F7;color:#9A6B1E">
+          <span class="chip__sample">Hold the ground</span><span class="chip__meta">#9A6B1E · 4.23:1 — under 4.5</span>
+        </div>
+        <div class="chip chip--dark" style="background:#0F141A;color:#E7B85C">
+          <span class="chip__sample">Hold the ground</span><span class="chip__meta">#E7B85C · 10.05:1</span>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch__name"><span class="swatch__el">金 Metal</span><span class="swatch__role">authority · structure</span></div>
+        <div class="chip chip--light" style="background:#F1F4F7;color:#4A5A6A">
+          <span class="chip__sample">Set the rule</span><span class="chip__meta">#4A5A6A · 6.42:1</span>
+        </div>
+        <div class="chip chip--dark" style="background:#0F141A;color:#A9BDD1">
+          <span class="chip__sample">Set the rule</span><span class="chip__meta">#A9BDD1 · 9.59:1</span>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch__name"><span class="swatch__el">水 Water</span><span class="swatch__role">resource · institution</span></div>
+        <div class="chip chip--light" style="background:#F1F4F7;color:#1F5FA8">
+          <span class="chip__sample">Go through the body</span><span class="chip__meta">#1F5FA8 · 5.83:1</span>
+        </div>
+        <div class="chip chip--dark" style="background:#0F141A;color:#7FB4F5">
+          <span class="chip__sample">Go through the body</span><span class="chip__meta">#7FB4F5 · 8.59:1</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="note note--risk">
+      <span class="note__label">Risk — one anchor fails as published</span>
+      <p>
+        <span class="han" lang="zh-Hans">土</span> Earth at <code>#9A6B1E</code> measures <b class="num">4.23:1</b> on the
+        light page ground and <b class="num">3.94:1</b> on the light secondary surface. Both are under the
+        <code>§2.3</code> body-text floor of 4.5:1. It clears only on pure white (4.67:1). <span class="han" lang="zh-Hans">火</span>
+        Fire has the same shape of problem on one ground (4.36:1). The fix is not to abandon the anchor —
+        it is to split it: keep the published hue as the <b>edge</b> value for rules, fills and borders
+        (which need 3:1), and darken a <b>text</b> value for anything a reader has to read.
+        <code>--earth: #8E621B</code> and <code>--fire: #B63C0B</code> clear 4.5:1 on every ground this
+        page uses. Dark mode needed no such split.
+      </p>
+    </div>
+  </div>
+
+  <!-- ====================== §2.2 DERIVATION ====================== -->
+  <h2>One worked derivation — and why the risk colour here is blue</h2>
+  <p>
+    Take a reader whose favourable elements are <span class="han" lang="zh-Hans">火</span> then <span class="han" lang="zh-Hans">土</span>,
+    and whose unfavourable element is <span class="han" lang="zh-Hans">水</span>. The derivation rule in <code>§2.2</code>
+    is mechanical — three assignments, no taste involved:
+  </p>
+
+  <div class="plate wide palette-derived">
+    <div class="plate__head">
+      <h3 class="han" lang="zh-Hans">用神 火 → 土 · 忌神 水</h3>
+      <span class="plate__ref">§2.2</span>
+    </div>
+
+    <div class="derive">
+      <div class="derive__cell derive__cell--1">
+        <span class="derive__role">Primary — 用神 #1</span>
+        <div class="derive__val">火 Fire</div>
+        <p class="derive__note">Carries the calls to act: ship, publish, teach, put a name on it.</p>
+      </div>
+      <div class="derive__cell derive__cell--2">
+        <span class="derive__role">Secondary — 用神 #2</span>
+        <div class="derive__val">土 Earth</div>
+        <p class="derive__note">Carries the supporting structure: what holds the output up.</p>
+      </div>
+      <div class="derive__cell derive__cell--r">
+        <span class="derive__role">Risk — 忌神 #1</span>
+        <div class="derive__val">水 Water</div>
+        <p class="derive__note">Carries every warning, drain, and stop condition in the document.</p>
+      </div>
+    </div>
+
+    <p class="fine">
+      Under this reader's palette, the two callouts below are what the report actually renders. Read the
+      colours before you read the words.
+    </p>
+
+    <div class="stack-s">
+      <div class="note note--action">
+        <span class="note__label">Action</span>
+        <p>Publish the method under your own name before the counterparty's launch. Two weeks of writing; no spend.</p>
+      </div>
+      <div class="note note--risk">
+        <span class="note__label">Risk — the drain</span>
+        <p>A second co-owner on the core asset does not add capacity here; it splits control on the one thing that cannot be split. Decline, and pay for the same work as output.</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="note__label">The point</span>
+      <p>
+        The warning above is <b>blue</b> and the instruction to act is <b>red-orange</b> — the exact
+        inverse of the traffic-light convention every reader arrives with. That is not a mistake and it is
+        not fixable by choosing nicer hues: red is this reader's <i>favourable</i> colour, so red has to
+        carry the go-signal, and the risk colour has to be something else. For a reader whose
+        <span class="han" lang="zh-Hans">忌神</span> is <span class="han" lang="zh-Hans">火</span>, the whole document inverts again.
+        <b>Hue is not portable between readers. The prefix word is.</b> This is precisely why
+        <code>§2.3</code> requires every risk statement to open with <code>Risk —</code> or
+        <code>Caution —</code>, and why the label survives grayscale printing, a colour-blind reader, and a
+        reader who never learns the convention at all.
+      </p>
+    </div>
+  </div>
+
+  <p class="fine">
+    Everything outside this section uses the framework default from <code>§2.4</code> — steel primary,
+    amber secondary, deep red risk — because a document about a system is not a document about a person
+    and has no <span class="han" lang="zh-Hans">用神</span> to derive from. Swapping between the two palettes is three
+    lines of CSS: the semantic tokens <code>--accent</code>, <code>--accent-2</code> and <code>--risk</code>
+    are re-pointed at different element tokens. No component stylesheet changes.
+  </p>
+
+  <!-- ====================== CONTRAST TABLE ====================== -->
+  <h2>Measured contrast, both modes, every ground</h2>
+  <p>
+    Computed with the WCAG 2.1 relative-luminance formula, not asserted. The floor is
+    <b class="num">4.5:1</b> for body text and <b class="num">3:1</b> for large text and UI edges
+    (<code>§2.3</code>). Verdicts are words, not colours — the table stays readable in grayscale.
+  </p>
+
+  <div class="wide scroller">
+    <table>
+      <caption>Accent on ground · WCAG 2.1 contrast ratio · light grounds <span class="mono">#FFFFFF / #F1F4F7 / #E8ECF1</span>, dark grounds <span class="mono">#161D25 / #0F141A / #1E2731</span></caption>
+      <thead>
+        <tr>
+          <th scope="col">Token</th><th scope="col">Hex</th>
+          <th scope="col">on --surface</th><th scope="col">on --bg</th><th scope="col">on --surface-2</th>
+          <th scope="col">Body text ≥ 4.5:1</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="rowgroup"><td colspan="6">Light mode</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">木</span> Wood</td><td class="n">#1F6F4A</td><td class="n">6.12</td><td class="n">5.54</td><td class="n">5.16</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">火</span> Fire — anchor</td><td class="n">#C2410C</td><td class="n">5.18</td><td class="n">4.69</td><td class="n">4.36</td><td class="verdict-fail">Fails on --surface-2</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">土</span> Earth — anchor</td><td class="n">#9A6B1E</td><td class="n">4.67</td><td class="n">4.23</td><td class="n">3.94</td><td class="verdict-fail">Fails on --bg and --surface-2</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">金</span> Metal</td><td class="n">#4A5A6A</td><td class="n">7.09</td><td class="n">6.42</td><td class="n">5.98</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">水</span> Water</td><td class="n">#1F5FA8</td><td class="n">6.44</td><td class="n">5.83</td><td class="n">5.43</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td>Risk red — default</td><td class="n">#A32014</td><td class="n">7.57</td><td class="n">6.86</td><td class="n">6.38</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">火</span> Fire — text variant</td><td class="n">#B63C0B</td><td class="n">5.77</td><td class="n">5.23</td><td class="n">4.86</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">土</span> Earth — text variant</td><td class="n">#8E621B</td><td class="n">5.37</td><td class="n">4.86</td><td class="n">4.52</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td>Ink</td><td class="n">#101519</td><td class="n">18.37</td><td class="n">16.64</td><td class="n">15.48</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td>Ink — muted</td><td class="n">#4E5A66</td><td class="n">7.05</td><td class="n">6.39</td><td class="n">5.94</td><td class="verdict-pass">Passes on all three</td></tr>
+
+        <tr class="rowgroup"><td colspan="6">Dark mode</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">木</span> Wood</td><td class="n">#5FD39B</td><td class="n">9.12</td><td class="n">9.93</td><td class="n">8.11</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">火</span> Fire</td><td class="n">#FF9E64</td><td class="n">8.35</td><td class="n">9.10</td><td class="n">7.43</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">土</span> Earth</td><td class="n">#E7B85C</td><td class="n">9.23</td><td class="n">10.05</td><td class="n">8.21</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">金</span> Metal</td><td class="n">#A9BDD1</td><td class="n">8.80</td><td class="n">9.59</td><td class="n">7.83</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td><span class="han" lang="zh-Hans">水</span> Water</td><td class="n">#7FB4F5</td><td class="n">7.88</td><td class="n">8.59</td><td class="n">7.02</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td>Risk red — default</td><td class="n">#FF8F7A</td><td class="n">7.65</td><td class="n">8.33</td><td class="n">6.81</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td>Ink</td><td class="n">#E7ECF2</td><td class="n">14.30</td><td class="n">15.57</td><td class="n">12.72</td><td class="verdict-pass">Passes on all three</td></tr>
+        <tr><td>Ink — muted</td><td class="n">#97A4B2</td><td class="n">6.69</td><td class="n">7.28</td><td class="n">5.95</td><td class="verdict-pass">Passes on all three</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wide scroller">
+    <table>
+      <caption>Callout grounds — an accent sitting on its own tint, which is the case the table above does not cover</caption>
+      <thead>
+        <tr><th scope="col">Callout</th><th scope="col">Light tint</th><th scope="col">Accent on tint</th><th scope="col">Ink on tint</th><th scope="col">Dark tint</th><th scope="col">Accent on tint</th><th scope="col">Ink on tint</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Fire</td><td class="n">#FDEDE4</td><td class="n">5.06</td><td class="n">16.10</td><td class="n">#2A1A10</td><td class="n">8.24</td><td class="n">14.10</td></tr>
+        <tr><td>Earth</td><td class="n">#F8EFDC</td><td class="n">4.69</td><td class="n">16.07</td><td class="n">#26200F</td><td class="n">8.80</td><td class="n">13.64</td></tr>
+        <tr><td>Water</td><td class="n">#E4EDF9</td><td class="n">5.45</td><td class="n">15.55</td><td class="n">#121F30</td><td class="n">7.71</td><td class="n">13.98</td></tr>
+        <tr><td>Steel</td><td class="n">#E7ECF1</td><td class="n">5.96</td><td class="n">15.45</td><td class="n">#1B242E</td><td class="n">8.13</td><td class="n">13.21</td></tr>
+        <tr><td>Risk red</td><td class="n">#FBE7E4</td><td class="n">6.36</td><td class="n">15.44</td><td class="n">#2C1512</td><td class="n">7.74</td><td class="n">14.45</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="fine">
+    All twenty callout combinations clear 4.5:1. Light-mode accents on tint use the text variants
+    (<code>#B63C0B</code>, <code>#8E621B</code>); the anchors are used for the 3px left border, which is a
+    UI edge and needs only 3:1.
+  </p>
+
+  <!-- ====================== COMPONENTS ====================== -->
+  <h2>The components</h2>
+  <p>
+    Six components carry almost every reading. Each is shown once, with the section of the spec it
+    implements. The content is illustrative — a reader deciding whether to sign a multi-year contract —
+    and deliberately free of anything a real chart would contain.
+  </p>
+
+  <!-- decision card -->
+  <div class="plate wide decision">
+    <div class="plate__head">
+      <h3>Decision card</h3>
+      <span class="plate__ref">§0 · §1 · ≤ 5 lines</span>
+    </div>
+    <div class="decision__lines">
+      <div class="decision__line"><span class="decision__key">Decision</span><p>Take the fixed-fee engagement. Decline the equity component.</p></div>
+      <div class="decision__line"><span class="decision__key">By</span><p>Sign or walk by <b class="num">2027-03-31</b>. The counterparty's fiscal year closes the window, not the chart.</p></div>
+      <div class="decision__line"><span class="decision__key">Confidence</span><p><span class="band">78%<small>band 70–84</small></span> — rests on three independent layers turning together and one non-chart fact (their funding runway).</p></div>
+      <div class="decision__line decision__line--gate"><span class="decision__key">Gate</span><p><b>Risk —</b> nothing moves until the IP-assignment clause is struck. That clause is the whole decision.</p></div>
+      <div class="decision__line"><span class="decision__key">If not</span><p>Gate not cleared by <b class="num">2027-02-28</b> → the answer is walk, and it does not need re-deriving.</p></div>
+    </div>
+  </div>
+
+  <!-- gloss -->
+  <div class="plate wide">
+    <div class="plate__head">
+      <h3>The gloss — term, meaning, consequence</h3>
+      <span class="plate__ref">§3.2</span>
+    </div>
+    <div class="gloss">
+      <div>
+        <div class="gloss__term" lang="zh-Hans">财多身弱</div>
+        <span class="gloss__rom">cái duō shēn ruò · "much wealth, weak self"</span>
+      </div>
+      <div class="gloss__rows">
+        <div class="gloss__row">
+          <span class="gloss__k">Plain meaning</span>
+          <p>The chart carries far more money-energy than the person has the capacity to hold on their own.</p>
+        </div>
+        <div class="gloss__row">
+          <span class="gloss__k">What it predicts</span>
+          <p>They earn <i>through a structure</i>, not alone. Strip the structure — the firm, the team, the brand — and the earnings destabilise even when the work is unchanged.</p>
+        </div>
+        <div class="gloss__row">
+          <span class="gloss__k">What to do</span>
+          <p>Give them a container. A payroll, an entity, a partner who runs delivery. Never a solo P&amp;L, and never a compensation structure that pays them personally for volume they must absorb personally.</p>
+        </div>
+      </div>
+    </div>
+    <p class="fine">
+      Three lines, every time. A term that cannot survive this treatment was ornament — delete it. First
+      use gets the full gloss and the romanisation; later uses run bare as <span class="han" lang="zh-Hans">财多身弱</span>.
+      <b>Provenance:</b> <span class="han" lang="zh-Hans">子平</span> tradition; schools differ on whether the remedy is
+      <span class="han" lang="zh-Hans">印</span> (support) or <span class="han" lang="zh-Hans">比劫</span> (peers). This reading takes
+      <span class="han" lang="zh-Hans">比劫</span>, because the illustrative chart already has <span class="han" lang="zh-Hans">印</span>
+      in quantity. Where the schools disagree, say so and say which you took.
+    </p>
+  </div>
+
+  <!-- finding: the three-part move -->
+  <div class="plate wide">
+    <div class="plate__head">
+      <h3>A finding — understand, then intervene</h3>
+      <span class="plate__ref">§4</span>
+    </div>
+    <div class="move">
+      <div class="move__step">
+        <div>
+          <span class="move__k">What is true</span>
+          <p>
+            The <span class="han" lang="zh-Hans">大运</span> boundary falls at <b class="num">2027</b>, and the
+            Vimśottari <span class="han" lang="zh-Hans">大运</span> lord changes in the same year. Two timing layers,
+            computed independently, turn together. The <span class="han" lang="zh-Hans">大限</span> does not move until
+            2034.
+          </p>
+          <code class="cmd">node .claude/calc/cast.mjs</code>
+        </div>
+      </div>
+      <div class="move__step">
+        <div>
+          <span class="move__k">What it means for this decision</span>
+          <p>
+            A boundary that two systems mark independently is a real hinge; a boundary only one system
+            marks is a boundary in that system's bookkeeping. The 2027 date is corroborated, so the
+            structure the reader signs into now is the structure they will still be inside when the
+            corroborated turn arrives — and the shape on the far side of it is not yet observable.
+          </p>
+        </div>
+      </div>
+      <div class="move__step">
+        <div>
+          <span class="move__k">What to do about it</span>
+          <p>
+            <b>Rule:</b> no new multi-year lock-in before the 2027 hinge.
+            <span class="lapse">That reason can lapse.</span> The block exists only because the far side
+            of the hinge is unobservable. Once 2027 has passed and the new period is legible, the block
+            falls away on its own and the question reopens — decided then on the counterparty's terms,
+            which do <i>not</i> lapse and would still bite. Do not carry this rule past its condition.
+          </p>
+          <p style="margin-top:var(--s2)"><span class="price">Cost: free — delay only. One clause redline if they will not wait.</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <span class="note__label">Why a rule and not a verdict</span>
+      <p>
+        "Do not sign" ages badly and gets applied forever by a reader who has forgotten why. A rule with a
+        stated lapse condition survives contact with new facts, and tells the reader when to stop obeying
+        it. Every static verdict in a reading should be tested against this: what would have to be true for
+        this to stop applying — and if the answer is "nothing," say so explicitly, because that is a much
+        stronger claim.
+      </p>
+    </div>
+  </div>
+
+  <!-- prediction -->
+  <div class="plate wide">
+    <div class="plate__head">
+      <h3>A prediction, with its falsifier attached</h3>
+      <span class="plate__ref">§6.2</span>
+    </div>
+    <div class="pred__rows">
+      <div class="pred__row"><span class="pred__k">Claim</span><p>By <b class="num">2027-06-30</b>, the reader's principal income line changes <i>character</i> — a different counterparty type, a different contract shape, or a different delivery mode. Not merely a different client.</p></div>
+      <div class="pred__row"><span class="pred__k">Falsifier</span><p>If on 2027-06-30 the largest income line is the same counterparty on the same contract shape as on 2026-06-30, <b>this branch is wrong</b> and the weight placed on the 2027 hinge drops accordingly. Nothing about the reading is rescued by the change arriving in 2028 instead.</p></div>
+      <div class="pred__row"><span class="pred__k">Base rate</span><p><span class="han" lang="zh-Hans">大运</span> boundaries fire for every reader every ten years, so the boundary alone predicts nothing. The claim is the <i>corroboration</i>: two systems changing within the same twelve months happens for roughly one reader-year in eight. Stated for the negative case too — the same base rate is what makes the 2034 single-system boundary weak evidence.</p></div>
+      <div class="pred__row"><span class="pred__k">Registered</span><p>Pre-registered at issue, before the outcome window opens. A criterion invented afterwards scores nothing.</p></div>
+      <div class="pred__row"><span class="pred__k">Cost to check</span><p><span class="price">One line from an invoice ledger. Under a minute.</span></p></div>
+    </div>
+  </div>
+
+  <!-- timeline -->
+  <div class="plate wide">
+    <div class="plate__head">
+      <h3>The timing picture — boundaries are the information, spans are context</h3>
+      <span class="plate__ref">§6.7</span>
+    </div>
+    <figure>
+      <div class="figwrap">
+        <svg viewBox="0 0 920 232" role="img"
+             aria-label="Four systems on a shared 2024 to 2044 year axis. The bazi luck-pillar track turns in 2027 and 2037. The ziwei decade-palace track turns in 2034. The Vedic Vimshottari track turns in 2027 and 2034. Two years are hinges where two systems turn together: 2027, marked by the bazi and Vedic tracks, and 2034, marked by the ziwei and Vedic tracks. 2037 is a single-system boundary. Qimen has no span track because it is cast per question.">
+
+          <!-- hinge callouts -->
+          <text class="tl-hinge-l" x="222.8" y="14" text-anchor="middle">2027 · 大运 + daśā</text>
+          <text class="tl-hinge-l" x="500" y="14" text-anchor="middle">2034 · 大限 + daśā</text>
+
+          <!-- hinge bands: mark the YEAR as corroborated without implying that
+               every track turns there. The turns themselves are the heavy rules. -->
+          <rect class="tl-band" x="219.3" y="22" width="7" height="180"/>
+          <rect class="tl-band" x="496.5" y="22" width="7" height="180"/>
+
+          <!-- track 1 — bazi 大运 -->
+          <text class="tl-sys" x="92" y="50" text-anchor="end">八字 大运</text>
+          <rect class="tl-span" x="104"   y="32" width="118.8" height="28" rx="2"/>
+          <rect class="tl-span" x="222.8" y="32" width="396"   height="28" rx="2"/>
+          <rect class="tl-span" x="618.8" y="32" width="277.2" height="28" rx="2"/>
+          <line class="tl-hinge" x1="222.8" y1="32" x2="222.8" y2="60"/>
+          <line class="tl-bound" x1="618.8" y1="32" x2="618.8" y2="60"/>
+          <text class="tl-span-l" x="163.4" y="51" text-anchor="middle">pillar 4</text>
+          <text class="tl-span-l" x="420.8" y="51" text-anchor="middle">pillar 5</text>
+          <text class="tl-span-l" x="757.4" y="51" text-anchor="middle">pillar 6</text>
+          <text class="tl-year" x="226.8" y="43">2027</text>
+          <text class="tl-year" x="622.8" y="43">2037</text>
+
+          <!-- track 2 — ziwei 大限 -->
+          <text class="tl-sys" x="92" y="90" text-anchor="end">紫微 大限</text>
+          <rect class="tl-span" x="104" y="72" width="396" height="28" rx="2"/>
+          <rect class="tl-span" x="500" y="72" width="396" height="28" rx="2"/>
+          <line class="tl-hinge" x1="500" y1="72" x2="500" y2="100"/>
+          <text class="tl-span-l" x="302" y="91" text-anchor="middle">palace 5</text>
+          <text class="tl-span-l" x="698" y="91" text-anchor="middle">palace 6</text>
+          <text class="tl-year" x="504" y="83">2034</text>
+
+          <!-- track 3 — Vedic Vimśottari -->
+          <text class="tl-sys" x="92" y="130" text-anchor="end">吠陀 daśā</text>
+          <rect class="tl-span" x="104"   y="112" width="118.8" height="28" rx="2"/>
+          <rect class="tl-span" x="222.8" y="112" width="277.2" height="28" rx="2"/>
+          <rect class="tl-span" x="500"   y="112" width="396"   height="28" rx="2"/>
+          <line class="tl-hinge" x1="222.8" y1="112" x2="222.8" y2="140"/>
+          <line class="tl-hinge" x1="500"   y1="112" x2="500"   y2="140"/>
+          <text class="tl-span-l" x="163.4" y="131" text-anchor="middle">Mercury</text>
+          <text class="tl-span-l" x="361.4" y="131" text-anchor="middle">Ketu · 7 yr</text>
+          <text class="tl-span-l" x="698"   y="131" text-anchor="middle">Venus · 20 yr</text>
+          <text class="tl-year" x="226.8" y="123">2027</text>
+          <text class="tl-year" x="504"   y="123">2034</text>
+
+          <!-- track 4 — qimen, honestly empty -->
+          <text class="tl-sys" x="92" y="170" text-anchor="end">奇门</text>
+          <rect class="tl-empty" x="104" y="152" width="792" height="28" rx="2"/>
+          <text class="tl-mute" x="500" y="171" text-anchor="middle">cast per question — no span track, by construction</text>
+
+          <!-- axis -->
+          <line class="tl-axis" x1="104" y1="196" x2="896" y2="196"/>
+          <line class="tl-axis" x1="104"   y1="196" x2="104"   y2="202"/>
+          <line class="tl-axis" x1="183.2" y1="196" x2="183.2" y2="200"/>
+          <line class="tl-axis" x1="262.4" y1="196" x2="262.4" y2="202"/>
+          <line class="tl-axis" x1="341.6" y1="196" x2="341.6" y2="200"/>
+          <line class="tl-axis" x1="420.8" y1="196" x2="420.8" y2="202"/>
+          <line class="tl-axis" x1="500"   y1="196" x2="500"   y2="200"/>
+          <line class="tl-axis" x1="579.2" y1="196" x2="579.2" y2="202"/>
+          <line class="tl-axis" x1="658.4" y1="196" x2="658.4" y2="200"/>
+          <line class="tl-axis" x1="737.6" y1="196" x2="737.6" y2="202"/>
+          <line class="tl-axis" x1="816.8" y1="196" x2="816.8" y2="200"/>
+          <line class="tl-axis" x1="896"   y1="196" x2="896"   y2="202"/>
+          <text class="tl-tick" x="104"   y="216" text-anchor="middle">2024</text>
+          <text class="tl-tick" x="262.4" y="216" text-anchor="middle">2028</text>
+          <text class="tl-tick" x="420.8" y="216" text-anchor="middle">2032</text>
+          <text class="tl-tick" x="579.2" y="216" text-anchor="middle">2036</text>
+          <text class="tl-tick" x="737.6" y="216" text-anchor="middle">2040</text>
+          <text class="tl-tick" x="896"   y="216" text-anchor="middle">2044</text>
+        </svg>
+      </div>
+      <div class="tl-key">
+        <span class="k-hinge"><i></i> Heavy rule — a turn corroborated by another system. The tinted band marks the hinge year.</span>
+        <span class="k-bound"><i></i> Light rule — a turn only one system marks</span>
+      </div>
+      <figcaption>
+        <b>Which turns are corroborated, and which are one system's bookkeeping.</b> Spans are drawn faint
+        on purpose; the readable information is the vertical rules and the years beside them. 2027 and 2034
+        are hinges — two independent systems change period in the same year — and get a tinted band across
+        the whole figure, with a heavy rule in each track that actually turns there. The band deliberately
+        does <i>not</i> put a boundary in a track that has none: <span class="han" lang="zh-Hans">大运</span>
+        runs straight through 2034. 2037 is a <span class="han" lang="zh-Hans">大运</span> boundary that
+        nothing else marks, so it gets a light rule — the weight the evidence deserves. Boundary weight,
+        not colour, carries that distinction, and tracks are identified by label rather than hue, so the
+        figure survives grayscale and colour-blind reading. <span class="han" lang="zh-Hans">奇门</span>
+        keeps its row because dropping it would imply it had been consulted and found silent — it is cast
+        per question and has no span to draw.
+      </figcaption>
+    </figure>
+  </div>
+
+  <!-- convergence -->
+  <div class="plate wide">
+    <div class="plate__head">
+      <h3>Convergence and residuals</h3>
+      <span class="plate__ref">§6.9 · §12</span>
+    </div>
+    <p>
+      <span class="status status--clean">Converged at round 2</span>
+      <span class="fine" style="margin-left:.6em">Version 3 · two adversarial rounds · convergence declared on the round that found nothing critical or major, and named.</span>
+    </p>
+    <div class="rounds">
+      <div class="round">
+        <span class="round__n">Round 1</span>
+        <p><span class="status status--open">3 must-fix</span> Adversarial pass. The hour fork was silently collapsed in the timing section; one <span class="han" lang="zh-Hans">大运</span> boundary had been hand-computed; one prediction was compatible with every outcome. All three fixed and re-run.</p>
+      </div>
+      <div class="round">
+        <span class="round__n">Round 2</span>
+        <p><span class="status status--clean">Clean</span> Adversarial pass plus verification: every quoted value re-derived from the calculators, every factual claim traced or marked. No critical or major findings. <b>This is the round convergence rests on.</b></p>
+      </div>
+    </div>
+    <h4>Residuals — stated, not buried</h4>
+    <ul class="residuals">
+      <li>The birth hour is not settled. Working default ≈ 80%, hedge ≈ 20%. The timing and fork sections are carried in both branches; the decision card holds under both, which means the fork does not discriminate here and is not evidence for the call.</li>
+      <li><span class="han" lang="zh-Hans">奇门</span> uses <span class="han" lang="zh-Hans">拆补法</span>. The alternative <span class="han" lang="zh-Hans">置闰法</span> shifts the <span class="han" lang="zh-Hans">局</span> in a minority of hours. It does not shift this one.</li>
+      <li>The Vedic ayanāṃśa is a linear Lahiri model, accurate to a few arcminutes. Immaterial to house placement here; it would matter for a graha within roughly 0.3° of a cusp, and none is.</li>
+      <li><span class="unverified">UNVERIFIED</span> The counterparty's fiscal-year end. This is load-bearing — it sets the 2027-03-31 date — and one email settles it. Flagged rather than assumed.</li>
+    </ul>
+    <div class="note">
+      <span class="note__label">What earlier versions got wrong</span>
+      <p>
+        Version 2 placed the <span class="han" lang="zh-Hans">大运</span> boundary at 2026. That was hand-computed and
+        wrong; the calculator gives 2027. Every scheduling window in version 2 that depended on the 2026
+        date is withdrawn, not silently re-dated. The error log stays in the document — the corrections are
+        the credibility, and a reading that reports only what survived is not auditable.
+      </p>
+    </div>
+  </div>
+
+  <!-- tone -->
+  <h2>Tone — uncertainty is honest, hedging is evasive</h2>
+  <p>
+    The distinction that governs the whole tone contract. Both columns are real sentences: the left ones
+    are what the system produces, the right ones are what it is built to prevent.
+  </p>
+  <div class="wide scroller">
+    <table class="dd">
+      <caption>§5 · the tone contract, with the banned-boilerplate cases</caption>
+      <thead><tr><th scope="col">Do</th><th scope="col">Don't</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>"78%, band 70–84 — resting on three independent layers and one non-chart fact."</td>
+          <td>"It may be that, in certain circumstances, one might wish to consider…"</td>
+        </tr>
+        <tr>
+          <td>"<span class="unverified">UNVERIFIED</span> — their fiscal-year end. One email settles it, and it sets the date."</td>
+          <td>"For entertainment purposes only." — <b>banned.</b> It protects the author and costs the reader nothing but the reading's usefulness. Transparency replaces it: show the derivation, name the convention, state the confidence, list the residuals.</td>
+        </tr>
+        <tr>
+          <td>"Version 2 put the boundary at 2026. That was hand-computed and wrong; the calculator gives 2027. The 2026 windows are withdrawn."</td>
+          <td>Re-issuing with the date quietly changed and no error log.</td>
+        </tr>
+        <tr>
+          <td>"This is a tax question. Route it to your accountant — I should not adjudicate it, and a guess here would be worse than the gap."</td>
+          <td>"Nothing herein constitutes professional advice." — <b>banned.</b> A blanket disclaimer scopes out everything and therefore scopes out nothing. Name the specific question and route it.</td>
+        </tr>
+        <tr>
+          <td>"The chart does not settle this. Both branches survive, and the recommendation is chosen to be correct under either."</td>
+          <td>Padding a genuine ambiguity into false balance so that both sides look equally supported.</td>
+        </tr>
+        <tr>
+          <td>"Charts describe tendency and timing. The reader acts, and the acting is most of it."</td>
+          <td>Any fatalism — "you are fated to," "this is unavoidable." Also any reading that only confirms what the reader hoped for.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ====================== EXCERPT ====================== -->
+  <h2>The same instrument under a different reader's palette</h2>
+  <p>
+    Everything above wears the framework default. Below is a short excerpt from a reading for the worked
+    reader — <span class="han" lang="zh-Hans">用神 火 → 土</span>, <span class="han" lang="zh-Hans">忌神 水</span> — with no component
+    changed, only the three semantic tokens re-pointed. This is what "the document is coloured by what
+    helps and what drains that person" means in practice.
+  </p>
+
+  <section class="excerpt palette-derived wide" aria-label="Report excerpt rendered in the derived palette">
+    <div class="excerpt__bar">
+      <p class="eyebrow">Excerpt · reading for the worked reader · tier: shareable</p>
+      <span class="plate__ref">palette: 火 / 土 / risk 水</span>
+    </div>
+
+    <div class="plate decision">
+      <div class="plate__head">
+        <h3>Should the reader take the co-ownership offer?</h3>
+        <span class="plate__ref">§0</span>
+      </div>
+      <div class="decision__lines">
+        <div class="decision__line"><span class="decision__key">Decision</span><p>No co-ownership. Pay for the same contribution as output, at a rate you would defend publicly.</p></div>
+        <div class="decision__line"><span class="decision__key">By</span><p>Answer within the current negotiation, not after. Deferring reads as a soft yes.</p></div>
+        <div class="decision__line"><span class="decision__key">Confidence</span><p><span class="band">82%<small>band 74–88</small></span> — three systems name the same failure mode; the fourth is silent rather than contrary.</p></div>
+        <div class="decision__line decision__line--gate"><span class="decision__key">Gate</span><p><b>Risk —</b> if custody of the core asset moves at all, the rest of this reading does not apply.</p></div>
+        <div class="decision__line"><span class="decision__key">If not</span><p>If they will not take the output deal, that is information about the offer, not about the price.</p></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="plate__head">
+        <h3>The mechanism, in one term</h3>
+        <span class="plate__ref">§3.2 · §4</span>
+      </div>
+      <div class="gloss">
+        <div>
+          <div class="gloss__term" lang="zh-Hans">伤官生财</div>
+          <span class="gloss__rom">shāng guān shēng cái · "output generates wealth"</span>
+        </div>
+        <div class="gloss__rows">
+          <div class="gloss__row"><span class="gloss__k">Plain meaning</span><p>The money in this chart arrives through <i>what is made and shown</i> — the built thing, the published method, the taught course — not through position or accumulation.</p></div>
+          <div class="gloss__row"><span class="gloss__k">What it predicts</span><p>Income tracks output volume and visibility with a lag. Anything that slows shipping costs more than it appears to; anything that raises visibility pays more than it appears to.</p></div>
+          <div class="gloss__row"><span class="gloss__k">What to do</span><p>Protect throughput first and price second. Structures that add approval steps to the making are expensive even when they are free.</p></div>
+        </div>
+      </div>
+      <div class="note note--action">
+        <span class="note__label">Action</span>
+        <p>Ship and put your name on it. The output channel is the earning channel, so publishing is not marketing here — it is the mechanism.</p>
+      </div>
+      <div class="note note--sub">
+        <span class="note__label">Supporting</span>
+        <p>Build the container that holds the output up: the entity, the payroll, the delivery partner. Secondary, and only in service of the first.</p>
+      </div>
+      <div class="note note--risk">
+        <span class="note__label">Risk — the drain</span>
+        <p>Shared custody of the core asset. It does not add capacity; it adds a second hand on the one control that cannot be duplicated. Note the colour: on this reader's palette the warning is blue and the go-signal is red. If you read the hue instead of the word, you read this backwards.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== SELF-CHECK ====================== -->
+  <h2>What this file itself checks out against</h2>
+  <div class="plate wide">
+    <div class="plate__head">
+      <h3>The exemplar held to its own standard</h3>
+      <span class="plate__ref">§2.3 · §6.9 · §7</span>
+    </div>
+    <ul class="residuals">
+      <li><b>Contrast:</b> every ratio on this page was computed with the WCAG 2.1 relative-luminance formula against the exact token hexes, not estimated. The anchors that fail are printed as failures with their remedy, rather than quietly removed from the table.</li>
+      <li><b>Rendered audit:</b> 488 text elements were measured against their actual composited background in all three theme states — unstamped, <code>data-theme="light"</code>, <code>data-theme="dark"</code>. One element falls below its threshold in each state, and it is the same one every time: the <span class="han" lang="zh-Hans">土</span> Earth light specimen at <b class="num">4.23:1</b>. That is the exhibit, not a defect — the swatch has to be painted at the failing anchor for the failure to be visible at all. Its caption is set in the ground's muted ink so the number explaining the failure is itself readable. No other element on the page misses 4.5:1.</li>
+      <li><b>Hue alone:</b> audited. Callouts carry a prefix word; contrast verdicts are sentences; the timeline distinguishes tracks by label and reserves colour for hinges only; the theme control is labelled in text. Nothing on the page loses meaning in grayscale or under a red-green simulation.</li>
+      <li><b>Three theme states:</b> the bare <code>:root</code> carries the complete light palette; the dark redefinition appears once under <code>@media (prefers-color-scheme: dark)</code> guarded as <code>:root:not([data-theme="light"])</code>, and once under <code>:root[data-theme="dark"]</code>. No colour is declared only inside a media or <code>[data-theme]</code> block, and <code>body</code> paints an explicit token background.</li>
+      <li><b>Self-contained:</b> zero external requests. No webfont, no CDN, no image, no network call. Type is a considered system stack, because a silent font fallback is worse than a chosen one.</li>
+      <li><b>De-personalised:</b> no birth data, no names, no third parties, no venture specifics. Every chart value, date and figure is illustrative and labelled as such — this file is safe to promote to the public template.</li>
+      <li><b>Residual:</b> the colour-blind check was performed by construction and by inspection — no encoding on this page uses hue as its only channel — rather than by running a simulator over a screenshot. That is weaker evidence than a simulation, and it is stated as weaker. If a future component adds a hue-only state, the check has to be re-run properly.</li>
+      <li><b>Residual:</b> the type stack resolves differently per platform. The design is set to degrade gracefully through the fallback chain, but the exact face a reader sees is not fixed, and a print target should specify one.</li>
+    </ul>
+  </div>
+
+  <p class="fine" style="margin-top:var(--s5); padding-top:var(--s3); border-top:1px solid var(--rule)">
+    Astrolabe report design system · <code>skills/06-report-design/SKILL.md</code> · framework file, no
+    reader data. Rendered targets and the privacy rail are specified in <code>§7</code>: a reading that
+    contains birth data, named third parties, or venture specifics stays local.
+  </p>
+
+</main>
+
+<script>
+/* Theme control. Three states, matching the three states the CSS handles:
+   System (no stamp) -> Light (data-theme="light") -> Dark (data-theme="dark").
+   localStorage can throw under file:// in some browsers, so every access is guarded. */
+(function () {
+  var STATES = ['system', 'light', 'dark'];
+  var LABEL = { system: 'Theme: System', light: 'Theme: Light', dark: 'Theme: Dark' };
+  var root = document.documentElement;
+  var btn = document.getElementById('themeswitch');
+  var label = document.getElementById('themelabel');
+  var state = 'system';
+
+  function store(v) { try { localStorage.setItem('astrolabe-showcase-theme', v); } catch (e) {} }
+  function load() { try { return localStorage.getItem('astrolabe-showcase-theme'); } catch (e) { return null; } }
+
+  function apply(next) {
+    state = STATES.indexOf(next) === -1 ? 'system' : next;
+    if (state === 'system') { root.removeAttribute('data-theme'); }
+    else { root.setAttribute('data-theme', state); }
+    label.textContent = LABEL[state];
+    btn.setAttribute('title', 'Cycles System, Light, Dark. Currently ' + state + '.');
+  }
+
+  apply(load() || 'system');
+
+  btn.addEventListener('click', function () {
+    var next = STATES[(STATES.indexOf(state) + 1) % STATES.length];
+    apply(next);
+    store(next);
+  });
+})();
+</script>
+</body>
+</html>

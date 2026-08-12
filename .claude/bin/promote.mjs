@@ -17,9 +17,16 @@
  *      tokens (name words + birth coordinates from birth.json, plus optional .claude/bin/
  *      promote-deny.json terms: client names, etc.). ANY hit → REFUSE that file and FAIL CLOSED.
  *
- *   node .claude/bin/promote.mjs <instance-dir>            # apply (template ← instance, framework only)
- *   node .claude/bin/promote.mjs <instance-dir> --dry-run  # preview, write nothing
- *   node .claude/bin/promote.mjs <instance-dir> --check    # report up-drift; exit 1 if any (CI / rollout)
+ *   node .claude/bin/promote.mjs <instance-dir>             # apply (template ← instance, framework only)
+ *   node .claude/bin/promote.mjs <instance-dir> --dry-run   # preview, write nothing
+ *   node .claude/bin/promote.mjs <instance-dir> --check     # report up-drift; exit 1 if any (CI / rollout)
+ *   node .claude/bin/promote.mjs <instance-dir> --seed-new  # ALSO carry manifest-declared framework
+ *                                                           # paths the template does not have yet
+ *
+ * --seed-new exists because guard 2 (template-parity) otherwise makes a brand-new framework file
+ * unpromotable forever, while rules/framework-rollout.md §2 forbids hand-copying. It weakens nothing:
+ * a path must still be DECLARED in the manifest (the deliberate act §4 requires), must be absent from
+ * the template, and must pass the SAME de-personalization scan and the same atomic fail-closed rule.
  *
  * Run from the TEMPLATE (this tool is template-only — it is NOT in the framework set, so sync never
  * copies it to an instance, where it would mis-locate the template). After a real apply: append
@@ -111,6 +118,38 @@ const frameworkFiles = [];
 for (const d of MANIFEST.framework.dirs) walk(path.join(TEMPLATE, d), d, frameworkFiles);
 for (const f of MANIFEST.framework.files) if (fs.existsSync(path.join(TEMPLATE, f))) frameworkFiles.push(norm(f));
 
+// ── SEEDING a genuinely NEW framework path (--seed-new) ────────────────────────────────────────
+// The parity guard walks the TEMPLATE, so a framework file the template has never had is invisible
+// to a normal promote — and rules/framework-rollout.md §2 forbids hand-copying. Without this, a new
+// framework file can never legitimately reach the template. `--seed-new` closes that gap WITHOUT
+// weakening any guard: a path is eligible only if it is (a) DECLARED in sync-manifest.json's
+// framework set, (b) present in the instance, (c) absent from the template, and (d) clean under the
+// SAME de-personalization scan. Declaration stays the deliberate act rules §4 requires; seeding is
+// merely the transport. Everything below (leak scan, atomic fail-closed, eval re-validation) applies
+// to seeded files identically.
+// ELIGIBILITY IS DELIBERATELY NARROW. Seeding "anything new inside a framework dir" would defeat
+// guard 2 outright: `.claude/calc/` exists in the template, and the instance's *.test.mjs files in it
+// are absent from the template PRECISELY BECAUSE they carry owner and third-party birth data. Those
+// must never seed. So only two shapes are eligible:
+//   (a) an explicitly NAMED manifest `framework.files` entry — someone typed that exact path; or
+//   (b) a file under a manifest `framework.dirs` entry whose WHOLE SUBTREE is new to the template
+//       (a newly declared module, e.g. a new skill directory).
+// A new file inside an EXISTING template dir is never seeded — that is the guard-2 case, untouched.
+const seededNew = [];
+if (flags.has("--seed-new")) {
+  const newDirs = MANIFEST.framework.dirs.filter((d) => !fs.existsSync(path.join(TEMPLATE, d)));
+  const cand = [];
+  for (const d of newDirs) walk(path.join(INSTANCE, d), d, cand);
+  for (const f of MANIFEST.framework.files) if (fs.existsSync(path.join(INSTANCE, f))) cand.push(norm(f));
+  for (const rel of cand) {
+    if (frameworkFiles.includes(rel)) continue;                 // already template-known
+    if (isPersonal(rel)) continue;                              // guard 1 still applies
+    if (fs.existsSync(path.join(TEMPLATE, rel))) continue;      // not actually new
+    seededNew.push(rel);
+  }
+  frameworkFiles.push(...seededNew);
+}
+
 const promoted = [], unchanged = [], skippedAbsent = [], skippedPersonal = [], refused = [];
 
 for (const rel of frameworkFiles) {
@@ -122,7 +161,8 @@ for (const rel of frameworkFiles) {
   let lst = null; try { lst = fs.lstatSync(src); } catch {}
   if (lst?.isSymbolicLink()) { skippedAbsent.push(rel + " (symlink — skipped)"); continue; }
   if (lst == null) { skippedAbsent.push(rel); continue; }            // guard 2: instance lacks it
-  if (hash(src) === hash(dst)) { unchanged.push(rel); continue; }
+  // A seeded path has no template counterpart yet, so there is nothing to compare against.
+  if (fs.existsSync(dst) && hash(src) === hash(dst)) { unchanged.push(rel); continue; }
   const hits = scanLeak(src);                                        // guard 3
   if (hits.length) { refused.push({ rel, hits }); continue; }
   promoted.push(rel);
@@ -134,7 +174,8 @@ const mode = DRY ? "DRY-RUN" : CHECK ? "CHECK" : "APPLY";
 console.log(`\n  Astrolabe promote [${mode}]  ${INSTANCE}  →  ${TEMPLATE}`);
 console.log(`  framework files: ${frameworkFiles.length} · promoted ${promoted.length} · unchanged ${unchanged.length} · instance-absent ${skippedAbsent.length} · personal-skipped ${skippedPersonal.length} · REFUSED ${refused.length}`);
 const show = (label, list) => { if (list.length) console.log(`  ${label}:\n` + list.map((x) => `    + ${x}`).join("\n")); };
-show(DRY || CHECK ? "would promote" : "promoted", promoted);
+show(DRY || CHECK ? "would promote" : "promoted", promoted.filter((r) => !seededNew.includes(r)));
+show(DRY || CHECK ? "would SEED (new to template)" : "SEEDED (new to template)", promoted.filter((r) => seededNew.includes(r)));
 if (refused.length) {
   console.log(`\n  ✗ REFUSED — personal tokens found (de-personalize before promoting):`);
   for (const r of refused) console.log(`    ✗ ${r.rel}  (matched: ${r.hits.join(", ")})`);
@@ -151,7 +192,12 @@ if (CHECK) {
 if (DRY) { console.log(`\n  (dry-run — nothing written)\n`); process.exit(0); }
 
 // Write phase — reached only when refused.length === 0 (no leak). Atomic w.r.t. the scan.
-for (const rel of promoted) fs.copyFileSync(path.join(INSTANCE, rel), path.join(TEMPLATE, rel));
+// Seeded paths may live in directories the template does not have yet, so create them first.
+for (const rel of promoted) {
+  const dst = path.join(TEMPLATE, rel);
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  fs.copyFileSync(path.join(INSTANCE, rel), dst);
+}
 
 if (promoted.length) {
   const logLine = `- promote ${new Date().toISOString?.() ?? ""} — ${promoted.length} file(s) from ${path.basename(INSTANCE)}: ${promoted.join(", ")}\n`;
