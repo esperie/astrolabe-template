@@ -18,3 +18,4 @@ Append-only record of framework changes promoted UP from instances into the temp
 - promote 2026-08-12T10:36:33.539Z — 1 file(s) from esperie: .claude/bin/sync.mjs
 - promote 2026-08-19T13:28:09.801Z — 5 file(s) from astrolabe-anya: .claude/calc/bazi.js, .claude/calc/cast.mjs, .claude/calc/eval.mjs, .claude/calc/public-validation.test.mjs, .claude/bin/sync-manifest.json
 - promote 2026-08-19T13:28:20.427Z — 1 file(s) from astrolabe-anya: .claude/bin/onboard.mjs
+- promote 2026-08-19T13:30:38.235Z — 3 file(s) from astrolabe-anya: .claude/calc/eval.mjs, .claude/calc/public-validation.test.mjs, .claude/calc/qimen.js

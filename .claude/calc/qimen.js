@@ -39,7 +39,11 @@ function jiaziIndex(stem, branch) {
 
 /** Cast the chart. useTrueSolar default true (B / 未时, per the professional reference convention). */
 function cast({ y, m, d, hour, minute = 0, tz, longitude, useTrueSolar = true }) {
-  const b = bazi.computeChart({ y, m, d, hour, minute, tz, longitude });
+  // Pass the convention through: the 日柱 (and so 符头/元/定局, and the 五鼠遁 hour stem below)
+  // must come from the SAME clock that defines the 时辰. Otherwise a birth in the window where
+  // the two conventions disagree about the late-子时 day roll gets a true-solar 日柱 under a
+  // clock 时柱 — a chart from neither school.
+  const b = bazi.computeChart({ y, m, d, hour, minute, tz, longitude, useTrueSolar });
   const dayStem = b.pillars.day.stem;
   const hourStem = useTrueSolar ? b.pillars.hour.stem : null;
   const hourBranch = useTrueSolar ? b.pillars.hour.branch : BRANCHES[Math.floor(((hour + minute / 60 + 1) % 24) / 2) % 12];

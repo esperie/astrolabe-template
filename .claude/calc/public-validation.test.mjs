@@ -112,6 +112,11 @@ ok("qimen [regression] 甲午时 → 时干宫4 (甲遁辛) · shift=0 · Destin
     solar.mingGong === "壬申" && clock.mingGong === "辛未", `${solar.mingGong}→${clock.mingGong}`);
   // The late-子时 day roll must use the SAME clock that defines the 时辰, or the day pillar and
   // the hour pillar come from two different conventions at once.
+  // qimen built its 符头/定局 and 五鼠遁 hour stem from the true-solar 日柱 even in clock mode —
+  // a late-子时 clock chart mixed a true-solar 日柱 with a clock 时柱. 值使宫 moves with the roll.
+  ok("qimen clock lane uses the clock 日柱 (值使宫 1→8)",
+    qimen.cast(lateZi).zhiShiPalace === 1 && qimen.cast({ ...lateZi, useTrueSolar: false }).zhiShiPalace === 8,
+    `${qimen.cast(lateZi).zhiShiPalace}→${qimen.cast({ ...lateZi, useTrueSolar: false }).zhiShiPalace}`);
   ok("bazi late-子时 roll follows the convention 丙申→丁酉",
     bazi.computeChart(lateZi).pillars.day.gz === "丙申" &&
     bazi.computeChart({ ...lateZi, useTrueSolar: false }).pillars.day.gz === "丁酉",
