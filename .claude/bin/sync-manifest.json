@@ -19,6 +19,7 @@
       ".claude/agents/requirements-analyst.md",
       ".claude/agents/deep-analyst.md",
       ".claude/bin/canon-amend.mjs",
+      ".claude/bin/onboard.mjs",
       ".claude/bin/sync.mjs",
       ".claude/bin/sync-manifest.json",
       ".claude/bin/emit-cli-artifacts.mjs",

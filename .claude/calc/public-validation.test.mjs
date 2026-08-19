@@ -18,6 +18,8 @@
  * Per-instance charts are validated separately by the per-person canon-consistency.test.mjs
  * (generated at onboarding). Run: node .claude/calc/public-validation.test.mjs
  */
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import bazi from "./bazi.js";
 import ziwei from "./ziwei.js";
 import qimen from "./qimen.js";
@@ -88,6 +90,49 @@ ok("qimen [regression] 甲午时 → 时干宫4 (甲遁辛) · shift=0 · Destin
   q.shiganPalace === 4 && [1, 8, 3, 4, 9, 2, 7, 6].every((p) => q.chart[p].tianStem === q.chart[p].diPan) &&
   q.destiny.palace === 8 && q.destiny.star === "天任" && q.destiny.deity === "九地" && q.destiny.door === "杜门",
   `${q.shiganPalace}/${q.destiny.palace}/${q.destiny.star}/${q.destiny.deity}/${q.destiny.door}`);
+
+// ── Hour convention (the A/B fork) — bazi must honour `useTrueSolar` like ziwei/qimen do ──
+// Synthetic inputs (no person): a clock time just past a 时辰 boundary, west of its meridian, so
+// true-solar and raw clock land in DIFFERENT 时辰. Regression locks — before 2026-08-19 bazi had
+// no convention switch at all, so `cast.mjs --clock/--both` printed the true-solar chart under a
+// clock heading and the hedge hour pillar was unreachable from the tool.
+{
+  const base = { y: 1879, m: 3, d: 14, tz: 0, longitude: -5, latitude: 0, gender: "male" };
+  const fork = { ...base, hour: 13, minute: 5 };            // true-solar 12.59 (午) vs clock 13.08 (未)
+  const lateZi = { ...base, hour: 23, minute: 10 };         // true-solar 22.68 (亥) vs clock 23.17 (子)
+  const dflt = bazi.computeChart(fork), solar = bazi.computeChart({ ...fork, useTrueSolar: true });
+  const clock = bazi.computeChart({ ...fork, useTrueSolar: false });
+  ok("bazi default hour convention === true-solar (unchanged)",
+    dflt.pillars.hour.gz === solar.pillars.hour.gz && dflt.mingGong === solar.mingGong && dflt.hourConvention === "true-solar",
+    `${dflt.pillars.hour.gz}/${dflt.mingGong}/${dflt.hourConvention}`);
+  ok("bazi useTrueSolar=false → clock hour pillar 甲午→乙未",
+    solar.pillars.hour.gz === "甲午" && clock.pillars.hour.gz === "乙未" && clock.hourConvention === "clock",
+    `${solar.pillars.hour.gz}→${clock.pillars.hour.gz}/${clock.hourConvention}`);
+  ok("bazi 命宫 follows the hour convention 壬申→辛未",
+    solar.mingGong === "壬申" && clock.mingGong === "辛未", `${solar.mingGong}→${clock.mingGong}`);
+  // The late-子时 day roll must use the SAME clock that defines the 时辰, or the day pillar and
+  // the hour pillar come from two different conventions at once.
+  ok("bazi late-子时 roll follows the convention 丙申→丁酉",
+    bazi.computeChart(lateZi).pillars.day.gz === "丙申" &&
+    bazi.computeChart({ ...lateZi, useTrueSolar: false }).pillars.day.gz === "丁酉",
+    `${bazi.computeChart(lateZi).pillars.day.gz}→${bazi.computeChart({ ...lateZi, useTrueSolar: false }).pillars.day.gz}`);
+}
+
+// ── cast.mjs CLI contract — --both / --clock must fork ALL THREE Chinese systems ──
+{
+  const run = (...a) => execFileSync(process.execPath, [fileURLToPath(new URL("./cast.mjs", import.meta.url)), ...a], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  const argsEinstein = ["1879-03-14", "11:30", String(40 / 60), "9.99", "48.40", "male"];
+  const both = run(...argsEinstein, "--both"), plain = run(...argsEinstein);
+  const count = (s, re) => (s.match(re) || []).length;
+  ok("cast --both prints 2× 八字 / 2× 紫微 / 2× 奇门 (one per hour convention)",
+    count(both, /── 八字 /g) === 2 && count(both, /── 紫微 /g) === 2 && count(both, /── 奇门 /g) === 2,
+    `${count(both, /── 八字 /g)}/${count(both, /── 紫微 /g)}/${count(both, /── 奇门 /g)}`);
+  ok("cast default prints 1× of each, headed by its convention",
+    count(plain, /── 八字 /g) === 1 && /── 八字 \(true-solar \(.\)\) ──/.test(plain) && !plain.includes("(clock"),
+    `${count(plain, /── 八字 /g)}`);
+  ok("cast --clock forks the 八字 block too (no true-solar chart under a clock heading)",
+    /── 八字 \(clock \(.\)\) ──/.test(run(...argsEinstein, "--clock")), "no clock 八字 block");
+}
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

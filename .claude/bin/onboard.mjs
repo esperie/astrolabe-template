@@ -79,7 +79,7 @@ const luck5 = b.luck.list.slice(0, 4).map((l) => l.gz).join(" ");
 //  (1) CONVENTION fork: true-solar (real lon) vs raw-clock (tz meridian) give different hour pillars.
 //  (2) BOUNDARY proximity: the true-solar hour sits within ~16 min of a 时辰 edge (odd true-solar
 //      hours), so a small birth-time error would flip the pillar to the adjacent 时辰.
-const bClock = bazi.computeChart({ ...I, longitude: tzN * 15 });   // raw-clock = tz central meridian
+const bClock = bazi.computeChart({ ...I, useTrueSolar: false });   // raw civil clock, no lon/EoT correction
 const hourClock = bClock.pillars.hour.gz;
 const convFork = hourClock !== P.hour.gz;
 const tsh = b.trueSolarHours;                                       // true-solar hour (decimal)

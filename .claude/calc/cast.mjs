@@ -8,8 +8,8 @@
  *   node .claude/calc/cast.mjs                         # the default sample chart
  *   node .claude/calc/cast.mjs 1990-05-20 08:30 8 114 22.3 female  # date time tz lon [lat] [gender]
  *     (latitude is needed for the Vedic ascendant; omit it and the Lagna defaults to the equator)
- *   node .claude/calc/cast.mjs --clock                 # use raw clock time
- *   node .claude/calc/cast.mjs --both                  # show both hour conventions
+ *   node .claude/calc/cast.mjs --clock                 # add the raw-clock hour convention
+ *   node .claude/calc/cast.mjs --both                  # same — both hour conventions, side by side
  */
 import fs from "node:fs";
 import bazi from "./bazi.js";
@@ -54,7 +54,6 @@ const rec = timezone.reconcile({ zone, tz: inp.tz, y: inp.y, m: inp.m, d: inp.d,
 if (rec.tz != null && Number.isFinite(rec.tz)) inp.tz = rec.tz;
 
 const b = bazi.computeChart(inp);
-const P = b.pillars;
 console.log(`\n════ ${isCanon ? CANON_LABEL : "CHART"} — ${inp.y}-${String(inp.m).padStart(2, "0")}-${String(inp.d).padStart(2, "0")} ${String(inp.hour).padStart(2, "0")}:${String(inp.minute).padStart(2, "0")} tz${inp.tz}${rec.source === "zone" ? `(${zone})` : ""} lon${inp.longitude} ${inp.gender} ════`);
 console.log(`true-solar hour ≈ ${b.trueSolarHours.toFixed(2)}`);
 // tz warnings: a corrected/disagreeing offset ('warn') always surfaces; advisory notes ('info' —
@@ -64,20 +63,25 @@ for (const w of rec.warnings) {
   else if (!isCanon) console.warn(`  · tz: ${w.msg}`);
 }
 
-console.log(`\n── 八字 (true-solar) ──`);
-console.log(`  时    日    月    年`);
-console.log(`  ${P.hour.gz}  ${P.day.gz}  ${P.month.gz}  ${P.year.gz}`);
-console.log(`  ${P.hour.tenGod}  ${P.day.tenGod}  ${P.month.tenGod}  ${P.year.tenGod}`);
-console.log(`  纳音: ${P.year.nayin}/${P.month.nayin}/${P.day.nayin}/${P.hour.nayin}`);
-console.log(`  大运 (${b.luck.forward ? "顺" : "逆"}, 起${b.luck.startAgeYears.toFixed(1)}): ${b.luck.list.map((l) => `${l.gz}(${l.startAge})`).join(" ")}`);
-console.log(`  胎元 ${b.taiYuan} · 命宫 ${b.mingGong} · 贵人 ${b.stars.天乙贵人.join("")} · 文昌 ${b.stars.文昌} · 桃花 ${b.stars.桃花} · 驿马 ${b.stars.驿马}`);
-console.log(`  本命卦 ${b.gua.num} ${b.gua.trigram} (${b.gua.group})`);
-// 藏干 element tally + the 干支 relation tables — printed so no reading ever hand-rolls
-// them (bazi.js: elementWeights / relations; both tested).
-{
-  const w = bazi.elementWeights(b).hidden;
+// The bazi block forks on the hour convention exactly like ziwei/qimen below, so `--clock` /
+// `--both` never print a true-solar chart under a clock-convention heading — and the hedge hour
+// pillar (and its 命宫) is actually visible for the A/B discipline.
+function baziBlock(useTrueSolar) {
+  const c = useTrueSolar ? b : bazi.computeChart({ ...inp, useTrueSolar });
+  const P = c.pillars;
+  console.log(`\n── 八字 (${c.hourConvention} (${P.hour.branch})) ──`);
+  console.log(`  时    日    月    年`);
+  console.log(`  ${P.hour.gz}  ${P.day.gz}  ${P.month.gz}  ${P.year.gz}`);
+  console.log(`  ${P.hour.tenGod}  ${P.day.tenGod}  ${P.month.tenGod}  ${P.year.tenGod}`);
+  console.log(`  纳音: ${P.year.nayin}/${P.month.nayin}/${P.day.nayin}/${P.hour.nayin}`);
+  console.log(`  大运 (${c.luck.forward ? "顺" : "逆"}, 起${c.luck.startAgeYears.toFixed(1)}): ${c.luck.list.map((l) => `${l.gz}(${l.startAge})`).join(" ")}`);
+  console.log(`  胎元 ${c.taiYuan} · 命宫 ${c.mingGong} · 贵人 ${c.stars.天乙贵人.join("")} · 文昌 ${c.stars.文昌} · 桃花 ${c.stars.桃花} · 驿马 ${c.stars.驿马}`);
+  console.log(`  本命卦 ${c.gua.num} ${c.gua.trigram} (${c.gua.group})`);
+  // 藏干 element tally + the 干支 relation tables — printed so no reading ever hand-rolls
+  // them (bazi.js: elementWeights / relations; both tested).
+  const w = bazi.elementWeights(c).hidden;
   console.log(`  藏干 (本气1.0/中气0.5/余气0.3): ${["木", "火", "土", "金", "水"].map((k) => `${k}${w[k]}`).join(" · ")}`);
-  const r = bazi.relations(b);
+  const r = bazi.relations(c);
   const lbl = { year: "年", month: "月", day: "日", hour: "时" };
   const who = (f) => f.participants.map((p) => lbl[p.label] || p.label).join("");
   const formed = r.findings.filter((f) => f.formed).map((f) => `${f.type}${f.subtype ? `(${f.subtype})` : ""}${f.level ? `/${f.level}` : ""} ${(f.branches || f.stems || [f.gz || f.branch]).join("")}[${who(f)}]`);
@@ -85,6 +89,8 @@ console.log(`  本命卦 ${b.gua.num} ${b.gua.trigram} (${b.gua.group})`);
   console.log(`  关系: ${formed.length ? formed.join(" · ") : "—"}`);
   if (unformed.length) console.log(`  未成局 (NOT formed): ${unformed.join(" · ")}`);
 }
+baziBlock(true);
+if (flags.has("--both") || flags.has("--clock")) baziBlock(false);
 // (用神 / favourable-element analysis is per-person — it lives in the instance canon, not here.)
 
 function ziweiBlock(useTrueSolar) {
@@ -97,8 +103,7 @@ function ziweiBlock(useTrueSolar) {
   }
 }
 ziweiBlock(true);
-if (flags.has("--both")) ziweiBlock(false);
-else if (flags.has("--clock")) ziweiBlock(false);
+if (flags.has("--both") || flags.has("--clock")) ziweiBlock(false);
 
 function qimenBlock(useTrueSolar) {
   const q = qimen.cast({ ...inp, useTrueSolar });
@@ -108,7 +113,7 @@ function qimenBlock(useTrueSolar) {
   console.log(`  命局奇门宫: ${d.direction}(${d.palace}) 命干${d.lifeStem} · 门${d.door}(值使) · 星${d.star} · 神${d.deity}`);
 }
 qimenBlock(true);
-if (flags.has("--both")) qimenBlock(false);
+if (flags.has("--both") || flags.has("--clock")) qimenBlock(false);
 
 function vedicBlock() {
   const v = vedic.compute({ y: inp.y, m: inp.m, d: inp.d, hour: inp.hour, minute: inp.minute, tz: inp.tz, lat: inp.latitude ?? 0, lon: inp.longitude });
@@ -129,5 +134,5 @@ function vedicBlock() {
 }
 vedicBlock();
 
-console.log(`\n[hour] Birth-hour conventions (true-solar vs raw-clock) can shift the hour pillar — run --both for hour-sensitive reads.`);
+console.log(`\n[hour] Birth-hour conventions (true-solar vs raw-clock) can shift the 八字 hour pillar and 命宫, the 紫微 命宫/五行局, and the 奇门 命局宫 — run --both for hour-sensitive reads.`);
 console.log("");

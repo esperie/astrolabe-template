@@ -375,10 +375,18 @@ function relations(a, b, opts = {}) {
 
 /**
  * Compute the full bazi chart.
- * @param {object} o {y,m,d,hour,minute,tz,longitude,gender,lateZi}
+ *
+ * `useTrueSolar` selects the HOUR CONVENTION (the A/B fork): true (default) = true-solar time,
+ * the orthodox BaZi convention; false = raw civil-clock time, the school that skips the
+ * longitude + equation-of-time correction. The choice drives the hour pillar, the late-子时 day
+ * roll, and 命宫 (which is built from the hour branch) — nothing else in the chart. Same option
+ * name and semantics as `ziwei.chartFromSolar` / `qimen.cast`, so a caller can fork all three
+ * systems on one flag.
+ *
+ * @param {object} o {y,m,d,hour,minute,tz,longitude,gender,lateZi,useTrueSolar}
  */
 function computeChart(o) {
-  const { y, m, d, hour, minute = 0, tz, longitude, gender = "male", lateZi = true } = o;
+  const { y, m, d, hour, minute = 0, tz, longitude, gender = "male", lateZi = true, useTrueSolar = true } = o;
   const jdUT = A.julianDayUT(y, m, d, hour, minute, tz);
   const lambda = A.sunLongitudeAtUT(jdUT, y);
 
@@ -395,14 +403,17 @@ function computeChart(o) {
   const mStem = STEMS[mStemIdx], mBranch = mb.branch;
 
   // ── Day (JDN; optional late-子时 roll) ──
+  // The hour convention also governs the late-子时 roll: whichever clock defines the 时辰
+  // must be the one that decides whether the birth already fell into the next 日柱.
   const tsRaw = A.trueSolarHours(y, m, d, hour, minute, tz, longitude);
+  const convRaw = useTrueSolar ? tsRaw : hour + minute / 60;
   let dayJDN = A.gregorianToJDN(y, m, d);
-  if (lateZi && tsRaw >= 23) dayJDN += 1;
+  if (lateZi && convRaw >= 23) dayJDN += 1;
   const dayIdx = (((dayJDN + 49) % 60) + 60) % 60;
   const dStem = STEMS[dayIdx % 10], dBranch = BRANCHES[dayIdx % 12];
 
-  // ── Hour (true solar) ──
-  const ts = ((tsRaw % 24) + 24) % 24;
+  // ── Hour (true-solar by default; raw clock when useTrueSolar=false) ──
+  const ts = ((convRaw % 24) + 24) % 24;
   const hourBranchIdx = Math.floor((ts + 1) / 2) % 12; // 子=23–01
   const hBranch = BRANCHES[hourBranchIdx];
   const ziHourStem = ((idxOfStem(dStem) % 5) * 2) % 10;
@@ -449,6 +460,8 @@ function computeChart(o) {
   return {
     input: o,
     trueSolarHours: tsRaw,
+    hourConvention: useTrueSolar ? "true-solar" : "clock",
+    hourHours: ts,
     pillars,
     luck: { forward, startAgeYears, list: luck },
     taiYuan,
