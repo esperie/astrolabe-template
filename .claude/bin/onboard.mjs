@@ -76,7 +76,10 @@ const luckSeq = b.luck.list.map((l) => `${l.gz}(${l.startAge})`).join(" · ");
 const luck5 = b.luck.list.slice(0, 4).map((l) => l.gz).join(" ");
 
 // A/B hour sensitivity has TWO independent causes (M3 — the old single check conflated them):
-//  (1) CONVENTION fork: true-solar (real lon) vs raw-clock (tz meridian) give different hour pillars.
+//  (1) CONVENTION fork: true-solar (real lon + equation of time) vs the raw civil clock give
+//      different hour pillars. NOT "the tz central meridian": moving the longitude to the meridian
+//      cancels the longitude term but LEAVES the equation of time applied (±16 min), which is a
+//      true-solar chart wearing a clock label and flips the pillar near a 时辰 edge.
 //  (2) BOUNDARY proximity: the true-solar hour sits within ~16 min of a 时辰 edge (odd true-solar
 //      hours), so a small birth-time error would flip the pillar to the adjacent 时辰.
 const bClock = bazi.computeChart({ ...I, useTrueSolar: false });   // raw civil clock, no lon/EoT correction
@@ -133,7 +136,7 @@ ${guard}
 
 ## 3. A/B hour status
 ${abFork
-    ? `- ⚠ **A/B hour sensitivity is LIVE.**${convFork ? ` **Convention fork:** true-solar → **${P.hour.gz}** (working default), raw-clock/standard-meridian → **${hourClock}**.` : ""}${boundaryNear ? ` **Boundary proximity:** true-solar hour ≈ ${tsh.toFixed(2)}h is only ~${Math.round(edgeMin)} min from a 时辰 edge — a small birth-time error would flip the hour pillar to the adjacent 时辰 (the alternative ≈ ${hourClock === P.hour.gz ? "the neighbouring 时辰" : hourClock}).` : ""}
+    ? `- ⚠ **A/B hour sensitivity is LIVE.**${convFork ? ` **Convention fork:** true-solar → **${P.hour.gz}** (working default), raw civil clock → **${hourClock}**.` : ""}${boundaryNear ? ` **Boundary proximity:** true-solar hour ≈ ${tsh.toFixed(2)}h is only ~${Math.round(edgeMin)} min from a 时辰 edge — a small birth-time error would flip the hour pillar to the adjacent 时辰 (the alternative ≈ ${hourClock === P.hour.gz ? "the neighbouring 时辰" : hourClock}).` : ""}
 - ⏳ AWAITING ANALYSIS: assess the probabilities (true-solar convention vs recorded-time reliability), dual-track any hour-dependent read, and never silently collapse the alternatives.`
     : `- Hour pillar **${P.hour.gz}** is robust: true-solar (≈ ${tsh.toFixed(2)}h, ~${Math.round(edgeMin)} min from the nearest 时辰 edge) and raw-clock agree. No material A/B fork.`}
 

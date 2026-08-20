@@ -139,5 +139,35 @@ ok("qimen [regression] 甲午时 → 时干宫4 (甲遁辛) · shift=0 · Destin
     /── 八字 \(clock \(.\)\) ──/.test(run(...argsEinstein, "--clock")), "no clock 八字 block");
 }
 
+// ── ONE implementation of the 时辰 rule (the root cause of the whole class) ──
+// Every defect above was the same shape: "clock hours → 时辰 → 五鼠遁 stem" was implemented THREE
+// times (bazi.js, ziwei.js, qimen.js) and only bazi.js is exercised by the true-solar oracles, so
+// the copies could disagree — or lack the switch entirely — undetected. bazi.computeChart is now
+// the sole implementation; ziwei/qimen read the 时柱 off the chart it returns. These two sweeps
+// fail the moment anyone re-introduces a private derivation, in either convention.
+// (Known open convention question, deliberately NOT asserted: 紫微 takes the 农历日 unrolled in
+// BOTH lanes, so a 晚子时 birth gets a rolled 日柱 in bazi but an unrolled 农历日 here. That is a
+// 早/晚子时 school choice needing an oracle, not a copy-drift bug — see rules/destiny-advisory.md §6.)
+{
+  let zBad = 0, qBad = 0, n = 0;
+  // Longitudes/dates are deliberately generic (no instance's birth data — this suite is public
+  // and gets promoted to the template): west-of-meridian, east-of-meridian, and the antimeridian.
+  for (const longitude of [-170, -5, 9.99, 75, 116.4, 121.5, 135])
+    for (const tz of [-11, 0, 40 / 60, 8, 9])
+      for (const [y, m, d] of [[1879, 3, 14], [1955, 11, 2], [2026, 8, 19]])
+        for (let hour = 0; hour < 24; hour++)
+          for (const minute of [0, 29, 31, 59]) {
+            const I = { y, m, d, hour, minute, tz, longitude, gender: "male" };
+            for (const useTrueSolar of [true, false]) {
+              const P = bazi.computeChart({ ...I, useTrueSolar }).pillars.hour;
+              n++;
+              if (ziwei.chartFromSolar({ ...I, useTrueSolar }).hourBranch !== P.branch) zBad++;
+              if (qimen.cast({ ...I, useTrueSolar }).hourPillar !== P.gz) qBad++;
+            }
+          }
+  ok(`ziwei 时支 === bazi 时支 in both conventions (${n} charts)`, zBad === 0, `${zBad} mismatches`);
+  ok(`qimen 时柱 === bazi 时柱 in both conventions (${n} charts)`, qBad === 0, `${qBad} mismatches`);
+}
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

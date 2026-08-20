@@ -17,6 +17,38 @@ description: The Astrolabe report design system — the canonical section index 
 
 ## 0. The three non-negotiables
 
+**0a. A reading is a STANDALONE document. No project context leaks into it.**
+
+The report is about its subject. It is not about the work that produced it, the conversation that
+prompted it, or any other document in the repository. **Every one of these is a leak and must be cut:**
+
+| Leak | Instead |
+|---|---|
+| "this is X, not the Y pairing" | Just be X. Never define a document by what it isn't |
+| "see the other reading for…" | Restate what this reader needs; do not cross-reference internal files |
+| "carried over from the four legs / the analyst / the agent" | Provenance is *the calculators*. Who or what performed the analysis is not content |
+| "for you" · "give him" · "the owner" | **Individual readings**: name the subject or write neutrally. **Decision memos** (the partnership type, §1) properly address their decision-maker — that is their function, not a leak |
+| "owner-confirmed", "you asked about" | State the fact. How it was obtained is not the reader's business |
+| Internal tooling, agents, session history | Silence |
+
+**Test before shipping: could this document be handed to someone who has never seen the repository, and
+still read as complete and coherent?** If not, it is leaking. *(Residuals and method are NOT leaks —
+they are the subject's own evidentiary status and must stay.)*
+
+**A document's OWN verification status is not a leak.** Convergence rounds, corrections, withdrawn
+claims and residuals (§6.9, §12–13) describe *this document's* evidentiary standing and are required.
+What is banned is narrating the machinery that produced it — named agents, sessions, tooling, other
+files. **"This claim was withdrawn and here is why" belongs. "The red-team agent found it in round 6"
+does not.**
+
+**The other carve-out, because §0a and §6.1 otherwise contradict each other.** §6.1 requires that every
+chart value show the command that reproduces it — that is the provenance layer, and it is the reason a
+reader can check the document rather than trust it. **Reproduction commands are therefore permitted,
+and only at `private` tier**, where the reader has the repository and the command is genuinely useful
+to them. **At `shareable` and `counterparty` tier they are leakage and must be stripped**, replaced by
+a plain statement that values are calculator-derived. The distinction is not aesthetic: a command is
+*verification* for someone who can run it and *noise about someone else's tooling* for everyone else.
+
 1. **Every quantitative claim is calculator-derived and traceable.** No hand-math, ever
    (`rules/calc-authority.md`). If a number cannot be re-derived by the reader running a command, it does
    not appear as a number.
@@ -277,6 +309,18 @@ before such a round exists, and name the round when you do.
 Ship at least one complete reference report rendered in the system. A design system without an exemplar
 degrades within three documents.
 
+### 6.11 Build a designed report INCREMENTALLY, section by section
+A full report is a large single file, and generating one in a single pass is fragile — two separate
+attempts at the same document died mid-generation and lost everything. **Write the skeleton and
+stylesheet first, then insert one section at a time**, each as its own edit, leaving a marker at the
+insertion point. Every completed section is then durable on disk and a failure costs one section rather
+than the document.
+
+**The specific hazard to guard against: a truncated report that still closes its tags looks finished.**
+It will open cleanly in a browser and read as complete while missing the sections that get acted on.
+**Verify by section coverage, never by "it renders."** A quick heading-list check against the source's
+section index catches it in seconds.
+
 ---
 
 ## 7. Rendering targets
@@ -285,6 +329,7 @@ degrades within three documents.
 |---|---|---|
 | **Markdown** (default) | The canonical stored reading in `readings/` | Must be readable raw; no HTML-only meaning |
 | **HTML** | Rendered/shared reports | Self-contained, theme-aware, both modes, no external requests |
+| | | ⚠ **`render-reading.mjs` is a CONVERTER, not a designer.** It pipes markdown through pandoc and applies the stylesheet — which yields a *styled document*, not a designed report: no decision card, no finding blocks, no timeline. It is the right tool for a quick readable copy. **A report that matters is hand-authored HTML against these components**, using the markdown as its content source. Do not mistake the converter's output for the system being applied. |
 | **Print / PDF** | Counterparty or archive | Palette degrades to grayscale legibly; footnotes on-page |
 
 **Privacy rail:** the instance repo is private (`rules/security.md`). A rendered reading containing birth

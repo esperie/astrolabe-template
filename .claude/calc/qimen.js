@@ -44,13 +44,13 @@ function cast({ y, m, d, hour, minute = 0, tz, longitude, useTrueSolar = true })
   // the two conventions disagree about the late-子时 day roll gets a true-solar 日柱 under a
   // clock 时柱 — a chart from neither school.
   const b = bazi.computeChart({ y, m, d, hour, minute, tz, longitude, useTrueSolar });
+  // The 时柱 is taken from that chart, never re-derived here. bazi.computeChart owns the ONE
+  // implementation of "clock hours → 时辰 → 五鼠遁 stem"; a second copy in this file is how the
+  // convention silently forks (this file used to keep its own, reachable only in clock mode and
+  // therefore never exercised by the true-solar regression locks).
   const dayStem = b.pillars.day.stem;
-  const hourStem = useTrueSolar ? b.pillars.hour.stem : null;
-  const hourBranch = useTrueSolar ? b.pillars.hour.branch : BRANCHES[Math.floor(((hour + minute / 60 + 1) % 24) / 2) % 12];
-  // hour stem for clock mode (五鼠遁 from day stem)
-  const dStemIdx = STEMS.indexOf(dayStem);
-  const hOrd = BRANCHES.indexOf(hourBranch);
-  const hStem = useTrueSolar ? hourStem : STEMS[(((dStemIdx % 5) * 2) % 10 + hOrd) % 10];
+  const hStem = b.pillars.hour.stem;
+  const hourBranch = b.pillars.hour.branch;
 
   // ── 定局 ──
   const jdUT = astro.julianDayUT(y, m, d, hour, minute, tz);

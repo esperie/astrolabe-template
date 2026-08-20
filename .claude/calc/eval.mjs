@@ -35,7 +35,7 @@ const DIRS = [path.join(ROOT, ".claude/calc"), path.join(ROOT, ".claude/hooks")]
 const META = {
   "astro.test.mjs":            { system: "astro (ephemeris core)", expect: 6,   oracle: "Meeus / known 节气 instants", residual: "—" },
   "timezone.test.mjs":         { system: "tz engine (IANA/ICU)",    expect: 31,  oracle: "IANA tz database via Node ICU (zoneinfo transitions)", residual: "pre-1970 offsets approximate (zoneinfo-documented); DST gap/overlap → post-transition" },
-  "public-validation.test.mjs":{ system: "public chart (Einstein)", expect: 23, oracle: "Astro-Databank AA · published BaZi · Lagna360/AstroSage · JPL", residual: "ziwei/qimen = regression locks (no public oracle); Moon ±0.3° (UT/ephemeris)" },
+  "public-validation.test.mjs":{ system: "public chart (Einstein)", expect: 25, oracle: "Astro-Databank AA · published BaZi · Lagna360/AstroSage · JPL", residual: "ziwei/qimen = regression locks (no public oracle); Moon ±0.3° (UT/ephemeris)" },
   "canon-consistency.test.mjs":{ system: "canon ↔ calculators",    expect: 7,   oracle: "instance canon.md §2/5/6/7/8/13", residual: "—", perPerson: true },
   "canon-guard.test.mjs":      { system: "canon-guard hook",        expect: 204, oracle: "deny/allow vectors",          residual: "interpreter runtime-path construction + env-set $VAR + external patch files — static-undecidable, FS-immutable defence" },
   "vet-gate.test.mjs":         { system: "vet-gate hook",           expect: 9,   oracle: "Stop-gate scenarios",         residual: "—" },
@@ -53,7 +53,19 @@ const FRAMEWORK_KEYS = new Set(Object.keys(META));
 try {
   const extra = JSON.parse(fs.readFileSync(path.join(__dirname, "eval-extra.json"), "utf8"));
   for (const [k, v] of Object.entries(extra || {})) {
-    if (FRAMEWORK_KEYS.has(k)) { console.error(`  ⚠ eval-extra.json may not redefine framework suite "${k}" — ignored`); continue; }
+    // A perPerson suite's assertion COUNT is per-person by construction — canon-consistency
+    // asserts this instance's canon, and a richer canon (e.g. an hour-convention A/B lock) means
+    // more assertions. Pinning that count in the framework meant no instance could add a canon
+    // lock without breaking every other instance's eval, so the guard is scoped: eval-extra may
+    // override `expect` for a perPerson suite and NOTHING else — never another field, never a
+    // non-perPerson suite. (M5 still holds where it matters: framework pins stay framework-owned.)
+    if (FRAMEWORK_KEYS.has(k)) {
+      if (META[k].perPerson && v && Number.isInteger(v.expect)) {
+        META[k] = { ...META[k], expect: v.expect };
+        continue;
+      }
+      console.error(`  ⚠ eval-extra.json may not redefine framework suite "${k}" — ignored`); continue;
+    }
     if (v && v.perPerson) { console.error(`  ⚠ eval-extra.json: only canon-consistency may be perPerson — stripping from "${k}"`); v.perPerson = false; }
     META[k] = v;
   }

@@ -98,8 +98,12 @@ function placeChart({ lunarMonth, lunarDay, yearStem, yearBranch, hourBranch, ge
   const grp = trinityGroup(yearBranch);
   place("火星", bi(HUOLING_START[grp][0]) + hOi); place("铃星", bi(HUOLING_START[grp][1]) + hOi);
   place("天马", bi(TIANMA[grp]));
-  const hongIdx = wrap(3 - yBi);
-  place("红鸾", hongIdx); place("天喜", hongIdx + 6);
+  // NB: named for 鸾, never for the star's first syllable — the promote de-personalization scan is a plain
+  // substring match against the instance owner's tokens, and a surname can collide with a star's
+  // romanization, permanently blocking this framework file from ever being promoted. Keep
+  // romanized identifiers out of framework code where a CJK literal already names the thing.
+  const luanIdx = wrap(3 - yBi);
+  place("红鸾", luanIdx); place("天喜", luanIdx + 6);
   // 天刑 从酉起正月顺数至生月; 天姚 从丑起正月顺数至生月 (lunar month)
   place("天刑", 9 + (lunarMonth - 1)); place("天姚", 1 + (lunarMonth - 1));
 
@@ -153,14 +157,12 @@ function placeChart({ lunarMonth, lunarDay, yearStem, yearBranch, hourBranch, ge
  */
 function chartFromSolar({ y, m, d, hour, minute = 0, tz, longitude, gender = "male", useTrueSolar = true }) {
   const lun = lunar.solarToLunar(y, m, d, tz);
-  const b = bazi.computeChart({ y, m, d, hour, minute, tz, longitude, gender });
-  let hourBranch;
-  if (useTrueSolar) {
-    hourBranch = b.pillars.hour.branch;
-  } else {
-    const civil = ((hour + minute / 60 + 1) % 24);
-    hourBranch = BRANCHES[Math.floor(civil / 2) % 12];
-  }
+  // The convention goes through to bazi.computeChart, which owns the ONE implementation of
+  // "clock hours → 时辰". The 时辰 is then read off that chart, never re-derived here — a second
+  // copy is reachable only in clock mode, so the true-solar regression locks would never catch
+  // it drifting. (紫微 needs only the 年柱 + 时支; the 日柱 late-子时 roll does not reach it.)
+  const b = bazi.computeChart({ y, m, d, hour, minute, tz, longitude, gender, useTrueSolar });
+  const hourBranch = b.pillars.hour.branch;
   const chart = placeChart({
     lunarMonth: lun.lunarMonth, lunarDay: lun.lunarDay,
     yearStem: b.pillars.year.stem, yearBranch: b.pillars.year.branch,
