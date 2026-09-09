@@ -666,6 +666,81 @@ function nakshatraOf(lonSid) {
   };
 }
 
+/* ───────────────── Pañcāṅga limbs 3–5: tithi · yoga · karaṇa ─────────────────
+ * Added 2026-09-07. The pañcāṅga ("five limbs") is muhūrta's own date-selection
+ * instrument: vāra (weekday), nakshatra (Moon's), tithi, yoga, karaṇa. The first two
+ * were already derivable here; the last three were NOT, so a date screen using this
+ * engine could only ever run three of the five — and a review found exactly that
+ * defect being reported as "the pañcāṅga favours X". All three are pure functions of
+ * the Sun and Moon sidereal longitudes, so they need no new ephemeris.
+ *
+ * NOTE ON AYANĀṂŚA: tithi/yoga/karaṇa depend on the DIFFERENCE (tithi, karaṇa) or the
+ * SUM (yoga) of the two longitudes. The difference is ayanāṃśa-invariant; the SUM is
+ * not — a yoga computed from tropical longitudes is wrong by 2× the ayanāṃśa. Pass
+ * sidereal values.
+ */
+
+// riktā ("empty") tithis — 4th, 9th, 14th of each pakṣa; classically avoided for new work.
+const RIKTA = new Set([4, 9, 14]);
+
+/**
+ * Tithi of (sun, moon) longitudes → {index 1..30, numberInPaksa 1..15, name, paksa,
+ * elongation, fracPassed, rikta}. Ayanāṃśa-invariant (a difference), so tropical or
+ * sidereal inputs agree.
+ *
+ * ⚠ SINGLE OWNER, AND ONE SPELLING. `paksaBala` computed its own tithi before this existed;
+ * it now returns this object verbatim. Field names follow the convention already in this file
+ * — `paksa` and `numberInPaksa`, NOT `paksha`/`num`, which an earlier draft of this function
+ * used and which would have left one concept with two spellings across two call sites, with
+ * neither test noticing. TITHI_NAMES lives beside paksaBala and is shared — do NOT add a
+ * second names table or a second floor(elongation/12).
+ */
+function tithiOf(sunLon, moonLon) {
+  const elong = mod360(moonLon - sunLon);
+  const i = Math.floor(elong / 12);                   // 0..29
+  const index = i + 1;                                // 1..30
+  const numberInPaksa = i < 15 ? index : index - 15;  // 1..15 within the pakṣa
+  const paksa = i < 15 ? "shukla" : "krishna";
+  const name = index === 15 ? "Purnima" : index === 30 ? "Amavasya" : TITHI_NAMES[numberInPaksa - 1];
+  return { index, numberInPaksa, name, paksa, elongation: elong, fracPassed: (elong % 12) / 12, rikta: RIKTA.has(numberInPaksa) };
+}
+
+// 27 nitya yogas, indexed by (Sun + Moon) / 13°20′.
+const YOGAS = [
+  "Vishkambha", "Priti", "Ayushman", "Saubhagya", "Shobhana", "Atiganda", "Sukarman",
+  "Dhriti", "Shula", "Ganda", "Vriddhi", "Dhruva", "Vyaghata", "Harshana", "Vajra",
+  "Siddhi", "Vyatipata", "Variyana", "Parigha", "Shiva", "Siddha", "Sadhya", "Shubha",
+  "Shukla", "Brahma", "Indra", "Vaidhriti",
+];
+// The classically inauspicious yogas (by 1-based number): Vishkambha 1, Atiganda 6,
+// Shula 9, Ganda 10, Vyaghata 13, Vajra 15, Vyatipata 17, Parigha 19, Vaidhriti 27.
+const YOGA_INAUSPICIOUS = new Set([1, 6, 9, 10, 13, 15, 17, 19, 27]);
+
+/** Nitya yoga of (sun, moon) sidereal longitudes → {index 1..27, name, auspicious}. */
+function yogaOf(sunSid, moonSid) {
+  const sum = mod360(sunSid + moonSid);
+  const i = Math.floor(sum / NAK_SPAN);       // 0..26, same 13°20′ span as a nakshatra
+  return { index: i + 1, name: YOGAS[i], auspicious: !YOGA_INAUSPICIOUS.has(i + 1), fracPassed: (sum % NAK_SPAN) / NAK_SPAN };
+}
+
+// Karaṇa = half-tithi (6° of elongation), 60 per lunar month.
+// 7 movable (chara) karaṇas repeat 8× over half-tithis 1..56; 4 fixed (sthira) fill
+// half-tithi 0 and 57..59. Vishti (Bhadra) is the one classically avoided.
+const KARANA_MOVABLE = ["Bava", "Balava", "Kaulava", "Taitila", "Gara", "Vanija", "Vishti"];
+
+/** Karaṇa of (sun, moon) sidereal longitudes → {index 1..60, name, fixed, avoid}. */
+function karanaOf(sunSid, moonSid) {
+  const elong = mod360(moonSid - sunSid);
+  const n = Math.floor(elong / 6);            // 0..59
+  let name, fixed = false;
+  if (n === 0) { name = "Kimstughna"; fixed = true; }
+  else if (n === 57) { name = "Shakuni"; fixed = true; }
+  else if (n === 58) { name = "Chatushpada"; fixed = true; }
+  else if (n === 59) { name = "Naga"; fixed = true; }
+  else name = KARANA_MOVABLE[(n - 1) % 7];
+  return { index: n + 1, name, fixed, avoid: name === "Vishti" };
+}
+
 /**
  * Navamsa (D9) sign of a sidereal longitude. Element-based counting start:
  *   movable (chara: Ar,Cn,Li,Cp) → navamsa count starts from the SAME sign;
@@ -839,10 +914,9 @@ function paksaBala(sunLon, moonLon, jdeTT) {
   const paksa = elongation < 180 ? "shukla" : "krishna"; // waxing / waning
 
   // Tithi 1..30 (12° each). 1–15 śukla (15 = Purnima), 16–30 kṛṣṇa (30 = Amavasya).
-  const tithiIndex = Math.floor(elongation / 12) + 1;
-  const inPaksa = tithiIndex <= 15 ? tithiIndex : tithiIndex - 15;
-  const tithiName =
-    tithiIndex === 15 ? "Purnima" : tithiIndex === 30 ? "Amavasya" : TITHI_NAMES[inPaksa - 1];
+  // Delegated to tithiOf so there is ONE implementation of this rule (2026-09-07).
+  const t = tithiOf(sunLon, moonLon);
+  const tithiIndex = t.index, inPaksa = t.num, tithiName = t.name;
 
   // Illuminated fraction. Meeus 48.3: tan i = R·sin ψ / (Δ − R·cos ψ); k = (1 + cos i)/2.
   let illuminatedFraction, illuminationMethod;
@@ -865,7 +939,7 @@ function paksaBala(sunLon, moonLon, jdeTT) {
     elongation,
     reducedArc,
     paksa,
-    tithi: { index: tithiIndex, name: tithiName, paksa, numberInPaksa: inPaksa },
+    tithi: t,   // tithiOf's object verbatim — one shape, one spelling (see tithiOf)
     illuminatedFraction,
     illuminationMethod,
     benefic: branchOf(beneficV),
@@ -1120,6 +1194,9 @@ module.exports = {
   toSidereal,
   rashiOf,
   nakshatraOf,
+  tithiOf,
+  yogaOf,
+  karanaOf,
   navamsaOf,
   vargaOf,
   charaKarakas,

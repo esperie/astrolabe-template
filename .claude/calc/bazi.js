@@ -158,9 +158,28 @@ const HIDDEN_WEIGHTS = [1.0, 0.5, 0.3];
 
 /**
  * Weighted element tallies for a chart's pillars.
+ *
+ * ⚠ THE WEIGHTS ARE A DOCTRINE TABLE WITH NO EXTERNAL ORACLE. `rules/destiny-advisory.md` MUST 16a
+ * requires a ranking claim to survive a sweep of the WEIGHTING CONVENTION as well as the unknown
+ * hour. Four knobs are exposed for that sweep, and the two added 2026-09-09 are the ones the rule
+ * previously mandated in spirit but the tool could not express — so "passes 16a" was being decided
+ * by what happened to be implemented rather than by what the doctrine actually varies over:
+ *
+ *   • `stemWeight`      — one scalar for all four 天干. Set 0 to score 藏干 only.
+ *   • `hiddenWeights`   — [本气,中气,余气]. Set [1,0,0] for a 本气-only reading.
+ *   • `monthMultiplier` — 得令: scale EVERY contribution of the MONTH pillar (月令司令). The classical
+ *                         weighting is not flat across pillars — 旺相休囚死 keys off the season — so a
+ *                         superlative that dies at ×2 was never a fact about the person. Requires the
+ *                         caller to label pillars (a bare GZ array is labelled year/month/day/hour).
+ *   • `includeDayStem`  — false drops the Day Master's OWN 天干 from the tally. A DM counted as its
+ *                         own support inflates its element by exactly `stemWeight`; whether 日主 is
+ *                         part of the strength count or the thing being measured is a real school
+ *                         split, and it moved a live superlative here.
+ *
  * @param {object|Array} input  a chart, a chart.pillars object, or an array of pillars
  *   (GZ strings like "己未", or {gz}/{stem,branch} objects — see normalizePillars).
- * @param {object} [opts] {hiddenWeights:[本气,中气,余气]=[1,0.5,0.3], stemWeight:1.0}
+ * @param {object} [opts] {hiddenWeights:[本气,中气,余气]=[1,0.5,0.3], stemWeight:1.0,
+ *   monthMultiplier:1.0, includeDayStem:true}
  * @returns {{convention, hidden, stems, total, detail}}
  *   hidden = 藏干-weighted tally {木,火,土,金,水}; stems = visible-天干 tally;
  *   total  = hidden + stems (offered, never assumed); detail = per-contribution rows.
@@ -168,17 +187,40 @@ const HIDDEN_WEIGHTS = [1.0, 0.5, 0.3];
 function elementWeights(input, opts = {}) {
   const w = opts.hiddenWeights || HIDDEN_WEIGHTS;
   const sw = opts.stemWeight == null ? 1.0 : opts.stemWeight;
+  const mm = opts.monthMultiplier == null ? 1.0 : opts.monthMultiplier;
+  const includeDayStem = opts.includeDayStem !== false;
   const zero = () => ({ 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 });
   const hidden = zero(), stems = zero(), total = zero();
   const detail = [];
-  for (const p of normalizePillars(input, null)) {
+  const pillars = normalizePillars(input, null);
+  // ⚠ FAIL CLOSED. `normalizePillars` labels a BARE ARRAY p1…p4, so monthMultiplier/includeDayStem
+  // would silently no-op on the commonest call shape — an inert knob that reports a swept convention
+  // while sweeping nothing. A 4-pillar bare array is canonically year/month/day/hour everywhere in
+  // this repo, so map it; anything else with a non-default knob throws rather than mis-scoring.
+  const auto = pillars.length === 4 && pillars.every((p, i) => p.label === `p${i + 1}`);
+  if (auto) pillars.forEach((p, i) => { p.label = ["year", "month", "day", "hour"][i]; });
+  if (mm !== 1.0 && !pillars.some((p) => p.label === "month")) {
+    throw new Error("elementWeights: monthMultiplier requires a pillar labelled 'month' (got: " +
+      pillars.map((p) => p.label).join(",") + ")");
+  }
+  if (!includeDayStem && !pillars.some((p) => p.label === "day")) {
+    throw new Error("elementWeights: includeDayStem:false requires a pillar labelled 'day' (got: " +
+      pillars.map((p) => p.label).join(",") + ")");
+  }
+  for (const p of pillars) {
+    // 得令: the month pillar carries the season. Scales stem AND 藏干 alike — 月令司令 is a statement
+    // about the pillar, not about one of its layers.
+    const mul = p.label === "month" ? mm : 1;
     const se = elemOfStem(p.stem);
-    stems[se] += sw;
-    total[se] += sw;
-    detail.push({ pillar: p.label, source: "天干", stem: p.stem, element: se, weight: sw, qi: "天干" });
+    if (includeDayStem || p.label !== "day") {
+      const sWeight = sw * mul;
+      stems[se] += sWeight;
+      total[se] += sWeight;
+      detail.push({ pillar: p.label, source: "天干", stem: p.stem, element: se, weight: sWeight, qi: "天干" });
+    }
     const hs = HIDDEN[p.branch];
     hs.forEach((s, i) => {
-      const weight = w[i] == null ? 0 : w[i];
+      const weight = (w[i] == null ? 0 : w[i]) * mul;
       const e = elemOfStem(s);
       hidden[e] += weight;
       total[e] += weight;
@@ -190,7 +232,10 @@ function elementWeights(input, opts = {}) {
   }
   const round = (o) => { for (const k of ELEM_NAMES) o[k] = Math.round(o[k] * 1e6) / 1e6; return o; };
   return {
-    convention: { hiddenWeights: w.slice(0, 3), stemWeight: sw, basis: "本气/中气/余气; 藏干 and 天干 tallied separately" },
+    convention: {
+      hiddenWeights: w.slice(0, 3), stemWeight: sw, monthMultiplier: mm, includeDayStem,
+      basis: "本气/中气/余气; 藏干 and 天干 tallied separately; 得令 via monthMultiplier",
+    },
     hidden: round(hidden), stems: round(stems), total: round(total), detail,
   };
 }

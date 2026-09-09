@@ -20,3 +20,21 @@ Append-only record of framework changes promoted UP from instances into the temp
 - promote 2026-08-19T13:28:20.427Z — 1 file(s) from astrolabe-anya: .claude/bin/onboard.mjs
 - promote 2026-08-19T13:30:38.235Z — 3 file(s) from astrolabe-anya: .claude/calc/eval.mjs, .claude/calc/public-validation.test.mjs, .claude/calc/qimen.js
 - promote 2026-08-19T13:53:15.243Z — 6 file(s) from esperie: .claude/calc/eval.mjs, .claude/calc/public-validation.test.mjs, .claude/calc/qimen.js, .claude/calc/ziwei.js, .claude/skills/06-report-design/SKILL.md, .claude/bin/onboard.mjs
+- promote 2026-09-05T06:32:26.712Z — 1 file(s) from esperie: .claude/bin/sync-manifest.json
+- promote 2026-09-05T06:50:26.967Z — 1 file(s) from esperie: .claude/bin/sync-manifest.json
+- promote 2026-09-06T04:32:36.802Z — 1 file(s) from esperie: .claude/bin/sync-manifest.json
+- promote 2026-09-06T05:07:32.871Z — 1 file(s) from esperie: .claude/bin/sync-manifest.json
+- promote 2026-09-06T07:27:19.705Z — 1 file(s) from esperie: .claude/rules/destiny-advisory.md
+- promote 2026-09-06T09:34:50.553Z — 1 file(s) from esperie: .claude/bin/sync-manifest.json
+- promote 2026-09-06T09:42:05.829Z — 1 file(s) from esperie: .claude/rules/destiny-advisory.md
+- promote 2026-09-06T09:45:25.202Z — 1 file(s) from esperie: .claude/bin/sync-manifest.json
+- promote 2026-09-07T02:54:33.492Z — 1 file(s) from esperie: .claude/rules/destiny-advisory.md
+- promote 2026-09-07T05:28:54.757Z — 3 file(s) from esperie: .claude/calc/vedic.js, .claude/rules/destiny-advisory.md, .claude/bin/sync-manifest.json
+- promote 2026-09-07T05:29:17.075Z — 2 file(s) from esperie: .claude/calc/dasha-margin.mjs, .claude/calc/dasha-margin.test.mjs
+- promote 2026-09-07T05:30:28.048Z — 1 file(s) from esperie: .claude/calc/eval.mjs
+- promote 2026-09-07T05:45:27.208Z — 6 file(s) from esperie: .claude/calc/dasha-margin.mjs, .claude/calc/dasha-margin.test.mjs, .claude/calc/eval.mjs, .claude/rules/destiny-advisory.md, .claude/calc/dasha-margin.mjs, .claude/calc/dasha-margin.test.mjs
+- promote 2026-09-08T14:30:25.603Z — 1 file(s) from esperie: .claude/bin/sync-manifest.json
+- promote 2026-09-08T14:46:36.758Z — 1 file(s) from esperie: .claude/rules/destiny-advisory.md
+- promote 2026-09-09T01:18:30.212Z — 1 file(s) from esperie: .claude/rules/destiny-advisory.md
+- promote 2026-09-09T05:45:28.381Z — 4 file(s) from esperie: .claude/calc/bazi.js, .claude/calc/eval.mjs, .claude/rules/destiny-advisory.md, .claude/bin/sync-manifest.json
+- promote 2026-09-09T05:47:07.427Z — 1 file(s) from esperie: .claude/calc/eval.mjs
