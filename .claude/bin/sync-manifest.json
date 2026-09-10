@@ -42,6 +42,7 @@
     ".claude/calc/canon-consistency.test.mjs",
     ".claude/calc/canon-quote-guard.test.mjs",
     ".claude/calc/retired-claims-guard.test.mjs",
+    ".claude/calc/citation-guard.test.mjs",
     ".claude/calc/era-offset-guard.test.mjs",
     ".claude/calc/date-screen.mjs",
     ".claude/calc/year-screen.mjs",

@@ -38,3 +38,4 @@ Append-only record of framework changes promoted UP from instances into the temp
 - promote 2026-09-09T01:18:30.212Z — 1 file(s) from esperie: .claude/rules/destiny-advisory.md
 - promote 2026-09-09T05:45:28.381Z — 4 file(s) from esperie: .claude/calc/bazi.js, .claude/calc/eval.mjs, .claude/rules/destiny-advisory.md, .claude/bin/sync-manifest.json
 - promote 2026-09-09T05:47:07.427Z — 1 file(s) from esperie: .claude/calc/eval.mjs
+- promote 2026-09-10T04:33:31.696Z — 1 file(s) from esperie: .claude/bin/sync-manifest.json
