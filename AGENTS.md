@@ -738,6 +738,20 @@ decision or recommendation.
    - code/calculators → tests MUST be green (re-run them);
    - chart values → re-derive from `.claude/calc/` (never hand-math);
    - factual claims → trace to a source in `docs/` or flag `[UNVERIFIED]`;
+   - **a citation that sits on the same line as a quotation MUST carry the `.md` extension**
+     — write `` `some-document.md:503` ``, not `` `some-document:503` ``.
+     **`citation-guard` only recognises the suffixed form**, so a bare name makes the
+     quotation **invisible to the guard** while still looking cited to a reader. *(Found
+     2026-09-12 in one instance: a whole section cited its sources in the bare form, so
+     **none of it was ever machine-checked** — and it was the section where that session's
+     two fabricated quotations had occurred. The guard's green was evidence about
+     `.md`-suffixed citations only.)* **The convention is the fix, not a looser matcher**:
+     the guard's own notes record that a wider matcher mis-attributed and had to be
+     narrowed, and a guard that mis-attributes is noise. Bare names remain fine in prose
+     that carries **no** quotation on the line.
+   - **quote the source's punctuation, and end the quotation where the source ends.** A
+     sentence-final period moved *inside* the quotation marks is enough to make a verbatim
+     span read as unfound.
    - canon → no contradiction with the validated calculators.
 4. **State the convergence verdict explicitly** (what was checked · residuals) before
    declaring the step complete or wrapping up.
