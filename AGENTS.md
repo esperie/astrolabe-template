@@ -680,10 +680,23 @@ no edits — the wiring is already correct and tested.
    chokepoint every lane shares. Install it with
    `node .claude/bin/install-git-guard.mjs` (sets `core.hooksPath=.githooks`). A clone
    without it has **no** canon protection outside Claude Code.
-3. **Keep `project_doc_max_bytes = 65536` in `.codex/config.toml`.** `AGENTS.md` carries the
-   inlined rules and exceeds Codex's 32,768-byte default; without the raise Codex silently
-   **truncates the governance rules**, including canon-protection and the convergence
-   mandate. This value is load-bearing.
+3. **`project_doc_max_bytes` in `.codex/config.toml` MUST cover `AGENTS.md`, and it is DERIVED,
+   never hand-pinned.** `AGENTS.md` carries the inlined rules and exceeds Codex's 32,768-byte
+   default; under the cap Codex silently **truncates the governance rules** — no error, no
+   warning — including canon-protection and the convergence mandate. The emitter computes it
+   from the measured file size (×1.25 headroom, rounded to a 64 KiB boundary, floor 65536), and
+   `lane.test.mjs` asserts `cap ≥ bytes`.
+   > **⚠ This rule previously read *"Keep `project_doc_max_bytes = 65536`"* — a fixed number that
+   > silently stopped being sufficient.** On 2026-09-15 `AGENTS.md` measured **75,059 B against
+   > the 65,536 B cap**: 9,523 B were being truncated **mid-sentence inside
+   > `rules/venture-strategy.md` MUST 2**, taking every rule after it off the Codex lane —
+   > including **MUST 7 (equity is a given)** and the entire **MUST NOT** block (*never leak the
+   > venture*). **The emitter had been interpolating the measured size into a COMMENT while
+   > pinning the cap at a constant**, so the config faithfully reported the file outgrowing the
+   > cap and enforced nothing — and the emitter's own drift check could never catch it, because
+   > the emitted file was perfectly in sync with a source that was wrong.
+   > **A guard that reports a number without enforcing it is not a guard.** Pin the invariant,
+   > derive the value.
 4. **Re-measure after a CLI upgrade.** Re-run the lane probes and update the table above.
    Vendor docs have been wrong in both directions here: Codex dropped repo-local
    `.codex/prompts/` discovery (0.128+) and does not honor `hooks.json` at 0.147.

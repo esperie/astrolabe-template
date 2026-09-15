@@ -272,6 +272,14 @@ function emitCodexConfig() {
       if (cfg.args) mcpBlocks += `args = ${JSON.stringify(cfg.args)}\n`;
     }
   }
+  // ⚠ DERIVED, NOT HARDCODED (fixed 2026-09-15). This block used to interpolate the measured
+  // size into the COMMENT while pinning `project_doc_max_bytes = 65536` — so the file faithfully
+  // reported AGENTS.md growing past the cap and enforced nothing. It had in fact crossed:
+  // 75059 B against a 65536 B cap, truncating 9523 B mid-sentence inside rules/venture-strategy.md
+  // and losing every rule after it on the Codex lane. A value that must cover a file it does not
+  // read is a guard that reports instead of enforcing; derive it from the file itself.
+  const CAP_FLOOR = 65536, CAP_HEADROOM = 1.25, CAP_STEP = 65536;
+  const capBytes = Math.max(CAP_FLOOR, Math.ceil((agentsBytes * CAP_HEADROOM) / CAP_STEP) * CAP_STEP);
   put(
     ".codex/config.toml",
     `# ${BANNER}
@@ -280,7 +288,10 @@ function emitCodexConfig() {
 # exceeds Codex's 32,768-byte default project-doc cap (currently ${agentsBytes} B).
 # Without this raise, Codex silently TRUNCATES the governance rules — including the
 # canon-protection and convergence rules — so this value is load-bearing, not cosmetic.
-project_doc_max_bytes = 65536
+#
+# DERIVED from the measured AGENTS.md size x${CAP_HEADROOM} headroom, rounded up to a
+# ${CAP_STEP} B boundary, floor ${CAP_FLOOR} B. Do not hand-pin it: it must track the file.
+project_doc_max_bytes = ${capBytes}
 ${mcpBlocks}`,
   );
 }

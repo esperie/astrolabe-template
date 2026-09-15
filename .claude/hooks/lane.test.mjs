@@ -238,6 +238,27 @@ t("[subprocess] emitted CLI lanes are in sync with .claude/ source (if emitted)"
   eq(r.status, 0, `emitter --check reported drift:\n${r.stdout}${r.stderr}`);
 });
 
+// ⚠ THE CAP MUST ACTUALLY COVER THE FILE IT EXISTS TO PROTECT (added 2026-09-15).
+// rules/multi-cli.md calls project_doc_max_bytes load-bearing: under it, Codex silently
+// TRUNCATES AGENTS.md — no error, no warning, just governance rules that stop existing on
+// that lane. The emitter used to interpolate the measured size into a COMMENT while pinning
+// the cap at a constant, so the config reported the file outgrowing the cap and enforced
+// nothing. It HAD outgrown it: 75059 B against 65536 B, cutting 9523 B mid-sentence inside
+// rules/venture-strategy.md and dropping every rule after it — including MUST 7 (equity is a
+// given) and the whole MUST NOT block. Drift-checking the emitter could never catch this,
+// because the emitted file was faithfully in sync with a source that was wrong.
+t("[subprocess] Codex project-doc cap covers AGENTS.md", () => {
+  const agents = path.join(ROOT, "AGENTS.md"), cfg = path.join(ROOT, ".codex/config.toml");
+  if (!fs.existsSync(agents) || !fs.existsSync(cfg)) return; // lanes not emitted here
+  const bytes = fs.statSync(agents).size;
+  const m = fs.readFileSync(cfg, "utf8").match(/^project_doc_max_bytes\s*=\s*(\d+)/m);
+  ok(m, "project_doc_max_bytes not found in .codex/config.toml");
+  const cap = Number(m[1]);
+  ok(cap >= bytes,
+    `Codex would TRUNCATE AGENTS.md: cap ${cap} B < file ${bytes} B (${bytes - cap} B of rules lost). ` +
+    `Re-run .claude/bin/emit-cli-artifacts.mjs — the cap derives from the file.`);
+});
+
 // ── bin/astro dispatcher ─────────────────────────────────────────────────────
 // Codex 0.128+ stopped discovering repo-local .codex/prompts/, so this dispatcher
 // is the only invocation surface for the phase commands on that lane. Exercised
